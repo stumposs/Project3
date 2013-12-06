@@ -1,0 +1,4 @@
+Press 'W' to wield or unwield the bazooka
+Press Control to crouch while wielding
+Press and hold Shift while standing still and wielding to enter aim mode
+While in aim mode, press Space to fire a pie
