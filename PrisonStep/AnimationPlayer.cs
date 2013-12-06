@@ -130,7 +130,7 @@ namespace PrisonStep
 		/// <param name="delta">The amount of time that has passed.</param>
 		public void Update(double delta)
 		{
-			time += delta;
+            time += delta;// *speed;
             if (looping && time >= clip.Duration)
             {
                 time -= clip.Duration;

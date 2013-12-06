@@ -447,6 +447,7 @@ namespace PrisonStep
             GamePadState gamePadState = GamePad.GetState(PlayerIndex.One);
             float speed = 0;
             float pan = 0;
+            float strafe = 0;
             float newOrientation;
             float deltaAngle;
 
@@ -482,13 +483,14 @@ namespace PrisonStep
                     case States.Stance:
                         speed = GetDesiredSpeed(ref keyboardState, ref gamePadState);
                         pan = GetDesiredTurnRate(ref keyboardState, ref gamePadState);
+                        strafe = GetDesiredStrafe(ref keyboardState, ref gamePadState);
 
                         if (speed > 0)
                         {
                             // We need to leave the stance state and start walking
-                            victoria.PlayClip("walkstart");
+                            victoria.PlayClip("walkloop");
                             victoria.Player.Speed = speed;
-                            state = States.WalkStart;
+                            state = States.WalkLoop;
                         }
 
                         if (pan != 0)
@@ -525,6 +527,7 @@ namespace PrisonStep
                             state = States.TurnLoopStart;
                         }
 
+                        strafe = GetDesiredStrafe(ref keyboardState, ref gamePadState);
                         pan = GetDesiredTurnRate(ref keyboardState, ref gamePadState);
                         if (pan == 0)
                         {
@@ -546,6 +549,7 @@ namespace PrisonStep
                             state = States.WalkLoopStart;
                         }
 
+                        strafe = GetDesiredStrafe(ref keyboardState, ref gamePadState);
                         speed = GetDesiredSpeed(ref keyboardState, ref gamePadState);
 
                         if (speed == 0)
@@ -575,6 +579,7 @@ namespace PrisonStep
                             state = States.WalkLoopStart;
                         }
 
+                        strafe = GetDesiredStrafe(ref keyboardState, ref gamePadState);
                         speed = GetDesiredSpeed(ref keyboardState, ref gamePadState);
                         if (speed == 0)
                         {
@@ -591,6 +596,7 @@ namespace PrisonStep
                     case States.StanceRaised:
                         speed = GetDesiredSpeed(ref keyboardState, ref gamePadState);
                         pan = GetDesiredTurnRate(ref keyboardState, ref gamePadState);
+                        strafe = GetDesiredStrafe(ref keyboardState, ref gamePadState);
 
                         location.Y = 0;
 
@@ -599,7 +605,7 @@ namespace PrisonStep
                             // We need to leave the stance state and start walking
                             victoria.PlayClip("lowerbazooka");
                             victoria.Player.Speed = speed;
-                            state = States.WalkStartBazooka;
+                            state = States.WalkLoopBazooka;
                         }
 
                         if (pan != 0 && !aiming)
@@ -684,6 +690,7 @@ namespace PrisonStep
                             state = States.TurnLoopStartBazooka;
                         }
 
+                        strafe = GetDesiredStrafe(ref keyboardState, ref gamePadState);
                         pan = GetDesiredTurnRate(ref keyboardState, ref gamePadState);
                         if (pan == 0)
                         {
@@ -707,6 +714,7 @@ namespace PrisonStep
                         }
 
                         speed = GetDesiredSpeed(ref keyboardState, ref gamePadState);
+                        strafe = GetDesiredStrafe(ref keyboardState, ref gamePadState);
 
                         if (speed == 0)
                         {
@@ -735,6 +743,7 @@ namespace PrisonStep
                             state = States.WalkLoopStartBazooka;
                         }
 
+                        strafe = GetDesiredStrafe(ref keyboardState, ref gamePadState);
                         speed = GetDesiredSpeed(ref keyboardState, ref gamePadState);
                         if (speed == 0)
                         {
@@ -807,7 +816,7 @@ namespace PrisonStep
                 // Determine that angle.
                 Matrix rootMatrix = victoria.RootMatrix;
                 float actualAngle = (float)Math.Atan2(rootMatrix.Backward.X, rootMatrix.Backward.Z);
-                Vector3 newLocation = location + Vector3.TransformNormal(victoria.DeltaPosition,
+                Vector3 newLocation = location + Vector3.TransformNormal(victoria.DeltaPosition + new Vector3(strafe, 0, 0),
                                Matrix.CreateRotationY(newOrientation - actualAngle));
 
                 //
@@ -958,7 +967,7 @@ namespace PrisonStep
 
             //do other keyboard based actions
 
-            if (keyboardState.IsKeyDown(Keys.W) && lastKeyboardState.IsKeyUp(Keys.W))
+            if (keyboardState.IsKeyDown(Keys.D1) && lastKeyboardState.IsKeyUp(Keys.D1))
             {
                 if (wieldBazooka)
                 {
@@ -985,6 +994,11 @@ namespace PrisonStep
             if (keyboardState.IsKeyDown(Keys.Space) && lastKeyboardState.IsKeyUp(Keys.Space) && aiming)
             {
                 game.Pies.FirePie();
+            }
+
+            if (keyboardState.IsKeyDown(Keys.A))
+            {
+                //transform *= Matrix.CreateTranslation(new Vector3(
             }
 
             playerCollision.Update(gameTime, location);
@@ -1151,7 +1165,7 @@ namespace PrisonStep
 
         private float GetDesiredSpeed(ref KeyboardState keyboardState, ref GamePadState gamePadState)
         {
-            if (keyboardState.IsKeyDown(Keys.Up))
+            if (keyboardState.IsKeyDown(Keys.W))
                 return 1;
 
             float speed = gamePadState.ThumbSticks.Right.Y;
@@ -1176,6 +1190,23 @@ namespace PrisonStep
             }
 
             return -gamePadState.ThumbSticks.Right.X * panRate;
+        }
+
+        private float GetDesiredStrafe(ref KeyboardState keyboardState, ref GamePadState gamePadState)
+        {
+            if (keyboardState.IsKeyDown(Keys.A))
+                return 1;
+
+            if (keyboardState.IsKeyDown(Keys.D))
+                return -1;
+
+            float speed = gamePadState.ThumbSticks.Right.Y;
+
+            // I'm not allowing you to walk backwards
+            //if (speed < 0)
+            //    speed = 0;
+
+            return speed;
         }
 
         public void PlayerAim()

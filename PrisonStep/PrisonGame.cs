@@ -31,6 +31,17 @@ namespace PrisonStep
         private Camera camera;
 
         /// <summary>
+        /// Splash screen states
+        /// </summary>
+        public enum GameState { splash, game, results };
+        GameState current = GameState.splash;
+
+        /// <summary>
+        /// Stores the last keyboard state for the game.
+        /// </summary>
+        KeyboardState lastKeyboardState;
+
+        /// <summary>
         /// The player in your game is modeled with this class
         /// </summary>
         private Player player;
@@ -233,57 +244,78 @@ namespace PrisonStep
                 Keyboard.GetState().IsKeyDown(Keys.Escape))
                 this.Exit();
 
+            base.Update(gameTime);
+
+            KeyboardState keyboardState = Keyboard.GetState();
+
             //
             // Update game components
             //
-
-            lineDraw.Clear();
-            /*
-            lineDraw.Crosshair(new Vector3(0, 100, 0), 20, Color.White);
-
-            lineDraw.Begin();
-            lineDraw.Vertex(new Vector3(0, 150, 0), Color.White);
-            lineDraw.Vertex(new Vector3(50, 100, 0), Color.Red);
-            lineDraw.End();*/
-
-            pies.Update(gameTime);
-            foreach (Pies pie in oldPies)
+            if (current == GameState.splash)
             {
-                pie.Update(gameTime);
+                if (keyboardState.IsKeyDown(Keys.Tab) && lastKeyboardState.IsKeyUp(Keys.Tab))
+                    current = GameState.game;
+
+            }
+            else if (current == GameState.game)
+            {
+                if (keyboardState.IsKeyDown(Keys.Tab) && lastKeyboardState.IsKeyUp(Keys.Tab))
+                    current = GameState.results;
+
+                lineDraw.Clear();
+                /*
+                lineDraw.Crosshair(new Vector3(0, 100, 0), 20, Color.White);
+
+                lineDraw.Begin();
+                lineDraw.Vertex(new Vector3(0, 150, 0), Color.White);
+                lineDraw.Vertex(new Vector3(50, 100, 0), Color.Red);
+                lineDraw.End();*/
+
+                pies.Update(gameTime);
+                foreach (Pies pie in oldPies)
+                {
+                    pie.Update(gameTime);
+                }
+
+                player.Update(gameTime);
+                dalek.Update(gameTime);
+                alien.Update(gameTime);
+
+                if (pies.PieCheckReload())
+                {
+                    oldPies.Add(pies);
+                    pies = new Pies(this);
+                    pies.LoadContent(Content);
+                    pies.LoadPiesInBazooka();
+                }
+
+                foreach (PrisonModel model in phibesModels)
+                {
+                    model.Update(gameTime);
+                }
+
+                camera.Update(gameTime);
+
+                // Amount to change slimeLevel in one second
+                float slimeRate = 2.5f;
+
+                if (slimed && slimeLevel >= -1.5)
+                {
+                    slimeLevel -= (float)gameTime.ElapsedGameTime.TotalSeconds * slimeRate;
+                }
+                else if (!slimed && slimeLevel < 1)
+                {
+                    slimeLevel += (float)gameTime.ElapsedGameTime.TotalSeconds * slimeRate;
+                }
+            }
+            else if (current == GameState.results)
+            {
+                if (keyboardState.IsKeyDown(Keys.Tab) && lastKeyboardState.IsKeyUp(Keys.Tab))
+                    current = GameState.splash;
             }
 
-            player.Update(gameTime);
-            dalek.Update(gameTime);
-            alien.Update(gameTime);
+            lastKeyboardState = keyboardState;
 
-            if (pies.PieCheckReload())
-            {
-                oldPies.Add(pies);
-                pies = new Pies(this);
-                pies.LoadContent(Content);
-                pies.LoadPiesInBazooka();
-            }
-
-            foreach (PrisonModel model in phibesModels)
-            {
-                model.Update(gameTime);
-            }
-
-            camera.Update(gameTime);
-
-            // Amount to change slimeLevel in one second
-            float slimeRate = 2.5f;
-
-            if (slimed && slimeLevel >= -1.5)
-            {
-                slimeLevel -= (float)gameTime.ElapsedGameTime.TotalSeconds * slimeRate;
-            }
-            else if (!slimed && slimeLevel < 1)
-            {
-                slimeLevel += (float)gameTime.ElapsedGameTime.TotalSeconds * slimeRate;
-            }
-
-            base.Update(gameTime);
         }
 
         /// <summary>
@@ -292,39 +324,59 @@ namespace PrisonStep
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.BlendState = BlendState.Opaque;
-            GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
-            graphics.GraphicsDevice.Clear(Color.Black);
-
-            foreach (PrisonModel model in phibesModels)
+            if (current == GameState.splash)
             {
-                model.Draw(graphics, gameTime);
+                spriteBatch.Begin();
+                spriteBatch.DrawString(UIFont, "If the aliens win, everyone will die.", new Vector2(10, 10), Color.White);
+                spriteBatch.End();
+                GraphicsDevice.DepthStencilState = DepthStencilState.Default;
             }
-
-            pies.Draw(graphics, gameTime);
-            foreach (Pies pie in oldPies)
+            else if (current == GameState.game)
             {
-                pie.Draw(graphics, gameTime);
+
+                GraphicsDevice.BlendState = BlendState.Opaque;
+                GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+
+                graphics.GraphicsDevice.Clear(Color.Black);
+
+                foreach (PrisonModel model in phibesModels)
+                {
+                    model.Draw(graphics, gameTime);
+                }
+
+                pies.Draw(graphics, gameTime);
+                foreach (Pies pie in oldPies)
+                {
+                    pie.Draw(graphics, gameTime);
+                }
+
+                player.Draw(graphics, gameTime);
+                dalek.Draw(graphics, gameTime);
+                alien.Draw(graphics, gameTime);
+
+                GraphicsDevice.BlendState = BlendState.AlphaBlend;
+                dalek.Spit.SpitModel.Draw(graphics, gameTime, dalek.Spit.Transform);
+                alien.Spit.SpitModel.Draw(graphics, gameTime, alien.Spit.Transform);
+                GraphicsDevice.BlendState = BlendState.Opaque;
+
+                base.Draw(gameTime);
+
+                //Show score and pies in bazooka
+                spriteBatch.Begin();
+                spriteBatch.DrawString(UIFont, "Pies: " + (10 - totalPiesFired).ToString(), new Vector2(10, 10), Color.White);
+                spriteBatch.DrawString(UIFont, "Score: " + score.ToString(), new Vector2(10, 25), Color.White);
+                spriteBatch.End();
+                GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+
             }
-
-            player.Draw(graphics, gameTime);
-            dalek.Draw(graphics, gameTime);
-            alien.Draw(graphics, gameTime);
-
-            GraphicsDevice.BlendState = BlendState.AlphaBlend;
-            dalek.Spit.SpitModel.Draw(graphics, gameTime, dalek.Spit.Transform);
-            alien.Spit.SpitModel.Draw(graphics, gameTime, alien.Spit.Transform);
-            GraphicsDevice.BlendState = BlendState.Opaque;
-
-            base.Draw(gameTime);
-
-            //Show score and pies in bazooka
-            spriteBatch.Begin();
-            spriteBatch.DrawString(UIFont, "Pies: " + (10 - totalPiesFired).ToString(), new Vector2(10, 10), Color.White);
-            spriteBatch.DrawString(UIFont, "Score: " + score.ToString(), new Vector2(10, 25), Color.White);
-            spriteBatch.End();
-            GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+            else if (current == GameState.results)
+            {
+                spriteBatch.Begin();
+                spriteBatch.DrawString(UIFont, "You are dead and all your friends are dead.", new Vector2(10, 10), Color.White);
+                spriteBatch.End();
+                GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+            }
         }
 
         public void DrawModel(GraphicsDeviceManager graphics, Model model, Matrix world)
