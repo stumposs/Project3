@@ -40,6 +40,8 @@ namespace PrisonStep
         private bool firing = false;
         public bool Firing { get { return firing; } set { firing = value; } }
 
+        private float smokeTimer = 0.0f;
+
         /// <summary>
         /// The spit move rate in centimeters per second
         /// </summary>
@@ -80,11 +82,18 @@ namespace PrisonStep
 
             if (game.Player.PlayerCollision.TestForCollision(spitCollision) && !game.Player.Crouch)
             {
+                smokeTimer = 1.0f;
                 if (!game.Slimed)
                 {
                     game.Score -= 50;
                     game.Slimed = true;
                 }
+            }
+
+            if (smokeTimer > 0.0f)
+            {
+                smokeTimer -= (float)delta;
+                game.SmokePlume.AddParticles(game.Player.Location);
             }
         }
     }

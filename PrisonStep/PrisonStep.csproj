@@ -120,6 +120,9 @@
     <Compile Include="BoundingCylinder.cs" />
     <Compile Include="Dalek.cs" />
     <Compile Include="Enemy.cs" />
+    <Compile Include="ExplosionParticleSystem3d.cs" />
+    <Compile Include="Particle3d.cs" />
+    <Compile Include="ParticleSystem3d.cs" />
     <Compile Include="Pies.cs" />
     <Compile Include="Player.cs" />
     <Compile Include="PrisonModel.cs" />

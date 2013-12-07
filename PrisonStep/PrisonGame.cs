@@ -143,6 +143,13 @@ namespace PrisonStep
         SpriteBatch spriteBatch;
 
         /// <summary>
+        /// Particle system business. Game components will use the particle system by accessing the game's copy of the particle effects.
+        /// </summary>
+        private SmokeParticleSystem3d smokePlume = null;
+        public SmokeParticleSystem3d SmokePlume { get { return smokePlume; } }
+
+
+        /// <summary>
         /// Constructor
         /// </summary>
         public PrisonGame()
@@ -162,6 +169,9 @@ namespace PrisonStep
             pies = new Pies(this);
             dalek = new Dalek(this);
             alien = new Alien(this);
+
+            //Particle system
+            smokePlume = new SmokeParticleSystem3d(9);
 
             // Some basic setup for the display window
             this.IsMouseVisible = true;
@@ -209,6 +219,8 @@ namespace PrisonStep
             player.LoadContent(Content);
             dalek.LoadContent(Content);
             alien.LoadContent(Content);
+
+            smokePlume.LoadContent(Content);
 
             foreach (PrisonModel model in phibesModels)
             {
@@ -296,6 +308,9 @@ namespace PrisonStep
 
                 camera.Update(gameTime);
 
+                //particle systems
+                smokePlume.Update(gameTime.ElapsedGameTime.TotalSeconds);
+
                 // Amount to change slimeLevel in one second
                 float slimeRate = 2.5f;
 
@@ -354,6 +369,8 @@ namespace PrisonStep
                 player.Draw(graphics, gameTime);
                 dalek.Draw(graphics, gameTime);
                 alien.Draw(graphics, gameTime);
+
+                smokePlume.Draw(GraphicsDevice, camera);
 
                 GraphicsDevice.BlendState = BlendState.AlphaBlend;
                 dalek.Spit.SpitModel.Draw(graphics, gameTime, dalek.Spit.Transform);
