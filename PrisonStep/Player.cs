@@ -38,7 +38,7 @@ namespace PrisonStep
         /// Player location in the prison. Only x/z are important. y still stay zero
         /// unless we add some flying or jumping behavior later on.
         /// </summary>
-        private Vector3 location = new Vector3(1000, 0, -1000);//new Vector3(275, 0, 1053);
+        private Vector3 location = new Vector3(0, 0, 0);
         public Vector3 Location { get { return location; } }
 
         /// <summary>
@@ -613,7 +613,8 @@ namespace PrisonStep
 
                 bool collision = false;     // Until we know otherwise
 
-                string region = TestRegion(newLocation);
+                //string region = TestRegion(newLocation);
+                string region = "lol";
                 playerRegion = region;
 
                 if (region == "")
@@ -634,11 +635,11 @@ namespace PrisonStep
                 Vector3 newCameraLocation = location + new Vector3(0, 100, 0);
                 string regionCamera = TestRegion(newCameraLocation);
 
-                if (regionCamera == "")
+                /*if (regionCamera == "")
                 {
                     // If not in a region, we have stepped out of bounds
                     collisionCamera = true;
-                }
+                }*/
 
                 if (!collisionCamera)
                 {
@@ -724,7 +725,6 @@ namespace PrisonStep
                     boneMat;
 
                 game.BazTransform = bazTransform;
-                //game.DrawModel(graphics, game.Bazooka, bazTransform);
 
 
             }
@@ -742,12 +742,10 @@ namespace PrisonStep
         {
             if (keyboardState.IsKeyDown(Keys.W))
                 return 1;
+            if (keyboardState.IsKeyDown(Keys.S))
+                return -1;
 
             float speed = gamePadState.ThumbSticks.Right.Y;
-
-            // I'm not allowing you to walk backwards
-            if (speed < 0)
-                speed = 0;
 
             return speed;
         }
