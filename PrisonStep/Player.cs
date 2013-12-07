@@ -909,7 +909,7 @@ namespace PrisonStep
                 //Vector3 newCameraLocation = location + new Vector3(0, 180, -40);
                 //game.Camera.Center = game.Camera.Eye + transform.Backward + new Vector3(0, -0.1f, 0);
 
-                Vector3 newCameraLocation = Vector3.Transform(new Vector3(0, 180, -400), transform);
+                Vector3 newCameraLocation = Vector3.Transform(new Vector3(0, 180, -200), transform);
                 game.Camera.Center = location + new Vector3(0, 100, 0);
 
                 bool collisionCamera = false;
@@ -937,7 +937,6 @@ namespace PrisonStep
                     }
                     game.Camera.Eye = newCameraLocation;
                 }
-
                 deltaTotal -= delta;
             } while (deltaTotal > 0);
 
@@ -1012,7 +1011,7 @@ namespace PrisonStep
         /// </summary>
         /// <param name="graphics"></param>
         /// <param name="gameTime"></param>
-        public void Draw(GraphicsDeviceManager graphics, GameTime gameTime)
+        public void Draw(GraphicsDeviceManager graphics, GameTime gameTime, Camera inCamera)
         {
             Matrix transform = Matrix.CreateRotationY(orientation);
             transform.Translation = location;
@@ -1043,8 +1042,8 @@ namespace PrisonStep
                 game.BazTransform = Matrix.CreateTranslation(0, -100, 0);
             }
 
-            victoria.Draw(graphics, gameTime, transform);
-            game.Bazooka.Draw(graphics, gameTime, game.BazTransform);
+            victoria.Draw(graphics, gameTime, transform, inCamera.View, inCamera.Projection);
+            game.Bazooka.Draw(graphics, gameTime, game.BazTransform, inCamera.View, inCamera.Projection);
 
         }
 

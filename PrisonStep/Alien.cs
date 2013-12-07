@@ -173,12 +173,12 @@ namespace PrisonStep
         /// </summary>
         /// <param name="graphics"></param>
         /// <param name="gameTime"></param>
-        public void Draw(GraphicsDeviceManager graphics, GameTime gameTime)
+        public void Draw(GraphicsDeviceManager graphics, GameTime gameTime, Camera inCamera)
         {
             Matrix transform = Matrix.CreateRotationY(orientation);
             transform.Translation = location;
 
-            enemy.Draw(graphics, gameTime, transform);
+            enemy.Draw(graphics, gameTime, transform, inCamera.View, inCamera.Projection);
         }
     }
 }

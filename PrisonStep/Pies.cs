@@ -292,9 +292,9 @@ namespace PrisonStep
 
         }
 
-        public void Draw(GraphicsDeviceManager graphics, GameTime gameTime)
+        public void Draw(GraphicsDeviceManager graphics, GameTime gameTime, Camera inCamera)
         {
-                pies.Draw(graphics, gameTime, transform);
+            pies.Draw(graphics, gameTime, transform, inCamera.View, inCamera.Projection);
         }
 
         public void LoadPiesInBazooka()

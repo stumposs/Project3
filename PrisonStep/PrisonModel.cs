@@ -201,13 +201,13 @@ namespace PrisonStep
         /// </summary>
         /// <param name="graphics"></param>
         /// <param name="gameTime"></param>
-        public void Draw(GraphicsDeviceManager graphics, GameTime gameTime)
+        public void Draw(GraphicsDeviceManager graphics, GameTime gameTime, Camera inCamera)
         {
 
-            DrawModel(graphics, model, Matrix.Identity);
+            DrawModel(graphics, model, Matrix.Identity, inCamera);
         }
 
-        private void DrawModel(GraphicsDeviceManager graphics, Model model, Matrix world)
+        private void DrawModel(GraphicsDeviceManager graphics, Model model, Matrix world, Camera inCamera)
         {
             // Apply the bone transforms
             Matrix[] absoTransforms = new Matrix[model.Bones.Count];
@@ -219,8 +219,8 @@ namespace PrisonStep
                 foreach (Effect effect in mesh.Effects)
                 {
                     effect.Parameters["World"].SetValue(absoTransforms[mesh.ParentBone.Index] * world);
-                    effect.Parameters["View"].SetValue(game.Camera.View);
-                    effect.Parameters["Projection"].SetValue(game.Camera.Projection);
+                    effect.Parameters["View"].SetValue(inCamera.View);
+                    effect.Parameters["Projection"].SetValue(inCamera.Projection);
                     effect.Parameters["Slime"].SetValue(game.SlimeLevel);
                 }
                 mesh.Draw();

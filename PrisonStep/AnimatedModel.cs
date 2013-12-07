@@ -239,12 +239,12 @@ namespace PrisonStep
         /// <param name="graphics">Device to draw the model on.</param>
         /// <param name="gameTime">Current game time.</param>
         /// <param name="transform">Transform that puts the model where we want it.</param>
-        public void Draw(GraphicsDeviceManager graphics, GameTime gameTime, Matrix transform)
+        public void Draw(GraphicsDeviceManager graphics, GameTime gameTime, Matrix transform, Matrix cameraView, Matrix cameraProjection)
         {
-            DrawModel(graphics, model, transform);
+            DrawModel(graphics, model, transform, cameraView, cameraProjection);
         }
 
-        private void DrawModel(GraphicsDeviceManager graphics, Model model, Matrix world)
+        private void DrawModel(GraphicsDeviceManager graphics, Model model, Matrix world, Matrix cameraView, Matrix cameraProjection)
         {
             if (skelToBone != null)
             {
@@ -261,8 +261,8 @@ namespace PrisonStep
                 {
                     Matrix temp = absoTransforms[mesh.ParentBone.Index] * world;
                     effect.Parameters["World"].SetValue(temp);
-                    effect.Parameters["View"].SetValue(game.Camera.View);
-                    effect.Parameters["Projection"].SetValue(game.Camera.Projection);
+                    effect.Parameters["View"].SetValue(cameraView);
+                    effect.Parameters["Projection"].SetValue(cameraProjection);
 
                     if (skelToBone != null)
                     {

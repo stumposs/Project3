@@ -34,6 +34,8 @@ namespace PrisonStep
         Matrix view;
         Matrix projection;
 
+        private Viewport viewport;
+
         #endregion
 
         #region Properties
@@ -77,6 +79,8 @@ namespace PrisonStep
         /// The distance to the far clipping plane
         /// </summary>
         public float ZFar { get { return zfar; } set { zfar = value; ComputeProjection(); } }
+
+        public Viewport Viewport { get { return viewport; } set { viewport = value; } }
 
         #endregion
 

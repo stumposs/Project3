@@ -30,6 +30,8 @@ namespace PrisonStep
         /// </summary>
         private Camera camera;
 
+        private Camera camera2;
+
         /// <summary>
         /// Splash screen states
         /// </summary>
@@ -74,6 +76,8 @@ namespace PrisonStep
         /// The game camera
         /// </summary>
         public Camera Camera { get { return camera; } }
+
+        public Camera Camera2 { get { return camera2; } }
 
         public PSLineDraw LineDraw { get { return lineDraw; } }
 
@@ -175,12 +179,18 @@ namespace PrisonStep
 
             // Some basic setup for the display window
             this.IsMouseVisible = true;
-			this.Window.AllowUserResizing = true;
+			//this.Window.AllowUserResizing = true;
 			this.graphics.PreferredBackBufferWidth = 1024;
 			this.graphics.PreferredBackBufferHeight = 768;
 
-            // Basic camera settings
+            // Camera settings
+
             camera = new Camera(graphics);
+            camera.Eye = new Vector3(800, 180, 1053);
+            camera.Center = new Vector3(275, 90, 1053);
+            camera.FieldOfView = MathHelper.ToRadians(42);
+
+            camera2 = new Camera(graphics);
             camera.Eye = new Vector3(800, 180, 1053);
             camera.Center = new Vector3(275, 90, 1053);
             camera.FieldOfView = MathHelper.ToRadians(42);
@@ -198,7 +208,18 @@ namespace PrisonStep
         protected override void Initialize()
         {
             camera.Initialize();
+            camera2.Initialize();
             player.Initialize();
+            //This section is lifted from the learning XNA 4.0 book. Partition the screen into two disjoint halves.
+            Viewport vp1 = GraphicsDevice.Viewport;
+            Viewport vp2 = GraphicsDevice.Viewport;
+            vp1.Height = (GraphicsDevice.Viewport.Height / 2) - 1;
+
+            vp2.Y = vp1.Height;
+            vp2.Height = vp1.Height;
+
+            camera.Viewport = vp1;
+            camera2.Viewport = vp2;
 
             base.Initialize();
 
@@ -307,6 +328,7 @@ namespace PrisonStep
                 }
 
                 camera.Update(gameTime);
+                camera2.Update(gameTime);
 
                 //particle systems
                 smokePlume.Update(gameTime.ElapsedGameTime.TotalSeconds);
@@ -349,43 +371,12 @@ namespace PrisonStep
             }
             else if (current == GameState.game)
             {
-
-                GraphicsDevice.BlendState = BlendState.Opaque;
-                GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-
                 graphics.GraphicsDevice.Clear(Color.Black);
-
-                foreach (PrisonModel model in phibesModels)
-                {
-                    model.Draw(graphics, gameTime);
-                }
-
-                pies.Draw(graphics, gameTime);
-                foreach (Pies pie in oldPies)
-                {
-                    pie.Draw(graphics, gameTime);
-                }
-
-                player.Draw(graphics, gameTime);
-                dalek.Draw(graphics, gameTime);
-                alien.Draw(graphics, gameTime);
-
-                smokePlume.Draw(GraphicsDevice, camera);
-
-                GraphicsDevice.BlendState = BlendState.AlphaBlend;
-                dalek.Spit.SpitModel.Draw(graphics, gameTime, dalek.Spit.Transform);
-                alien.Spit.SpitModel.Draw(graphics, gameTime, alien.Spit.Transform);
-                GraphicsDevice.BlendState = BlendState.Opaque;
-
-                base.Draw(gameTime);
-
-                //Show score and pies in bazooka
-                spriteBatch.Begin();
-                spriteBatch.DrawString(UIFont, "Pies: " + (10 - totalPiesFired).ToString(), new Vector2(10, 10), Color.White);
-                spriteBatch.DrawString(UIFont, "Score: " + score.ToString(), new Vector2(10, 25), Color.White);
-                spriteBatch.End();
-                GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-
+                GraphicsDevice.Viewport = camera.Viewport;
+                DrawGame(gameTime, camera);
+                GraphicsDevice.Viewport = camera2.Viewport;
+                DrawGame(gameTime, camera2);
+                
             }
             else if (current == GameState.results)
             {
@@ -394,6 +385,44 @@ namespace PrisonStep
                 spriteBatch.End();
                 GraphicsDevice.DepthStencilState = DepthStencilState.Default;
             }
+        }
+
+        public void DrawGame(GameTime gameTime, Camera inCamera)
+        {
+            GraphicsDevice.BlendState = BlendState.Opaque;
+            GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+
+            foreach (PrisonModel model in phibesModels)
+            {
+                model.Draw(graphics, gameTime, inCamera);
+            }
+
+            pies.Draw(graphics, gameTime, inCamera);
+            foreach (Pies pie in oldPies)
+            {
+                pie.Draw(graphics, gameTime, inCamera);
+            }
+
+            player.Draw(graphics, gameTime, inCamera);
+            dalek.Draw(graphics, gameTime, inCamera);
+            alien.Draw(graphics, gameTime, inCamera);
+
+            smokePlume.Draw(GraphicsDevice, camera);
+
+            GraphicsDevice.BlendState = BlendState.AlphaBlend;
+            dalek.Spit.SpitModel.Draw(graphics, gameTime, dalek.Spit.Transform, inCamera.View, inCamera.Projection);
+            alien.Spit.SpitModel.Draw(graphics, gameTime, alien.Spit.Transform, inCamera.View, inCamera.Projection);
+            GraphicsDevice.BlendState = BlendState.Opaque;
+
+            base.Draw(gameTime);
+
+            //Show score and pies in bazooka
+            spriteBatch.Begin();
+            spriteBatch.DrawString(UIFont, "Pies: " + (10 - totalPiesFired).ToString(), new Vector2(10, 10), Color.White);
+            spriteBatch.DrawString(UIFont, "Score: " + score.ToString(), new Vector2(10, 25), Color.White);
+            spriteBatch.End();
+            GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+
         }
 
         public void DrawModel(GraphicsDeviceManager graphics, Model model, Matrix world)
