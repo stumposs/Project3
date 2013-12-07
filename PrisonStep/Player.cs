@@ -39,7 +39,7 @@ namespace PrisonStep
         /// unless we add some flying or jumping behavior later on.
         /// </summary>
         private Vector3 location = new Vector3(0, 0, 0);
-        public Vector3 Location { get { return location; } }
+        public Vector3 Location { get { return location; } set { location = value; } }
 
         /// <summary>
         /// The player orientation as a simple angle
@@ -186,38 +186,6 @@ namespace PrisonStep
             // Convert to a 2D Point
             float x = v3.X;
             float y = v3.Z;
-
-            foreach (KeyValuePair<string, List<Vector2>> region in regions)
-            {
-                // For now we ignore the walls
-                if (region.Key.StartsWith("W") && playerRegion != "R_Section6" && playerRegion != "R_Section5" && playerRegion != "R_Door4" && playerRegion != "R_Door5")
-                    continue;
-
-                for (int i = 0; i < region.Value.Count; i += 3)
-                {
-                    float x1 = region.Value[i].X;
-                    float x2 = region.Value[i + 1].X;
-                    float x3 = region.Value[i + 2].X;
-                    float y1 = region.Value[i].Y;
-                    float y2 = region.Value[i + 1].Y;
-                    float y3 = region.Value[i + 2].Y;
-
-                    float d = 1.0f / ((x1 - x3) * (y2 - y3) - (x2 - x3) * (y1 - y3));
-                    float l1 = ((y2 - y3) * (x - x3) + (x3 - x2) * (y - y3)) * d;
-                    if (l1 < 0)
-                        continue;
-
-                    float l2 = ((y3 - y1) * (x - x3) + (x1 - x3) * (y - y3)) * d;
-                    if (l2 < 0)
-                        continue;
-
-                    float l3 = 1 - l1 - l2;
-                    if (l3 < 0)
-                        continue;
-
-                    return region.Key;
-                }
-            }
 
             return "";
         }
@@ -631,8 +599,9 @@ namespace PrisonStep
                 SetPlayerTransform();
 
                 bool collisionCamera = false;
-                camera.Center = location;
-                Vector3 newCameraLocation = location + new Vector3(0, 100, 0);
+                camera.Center = location + new Vector3(0,100,0);
+                Vector3 newCameraLocation = location + new Vector3(300, 100, 0);
+                camera.Eye = newCameraLocation;
                 string regionCamera = TestRegion(newCameraLocation);
 
                 /*if (regionCamera == "")
@@ -641,7 +610,7 @@ namespace PrisonStep
                     collisionCamera = true;
                 }*/
 
-                if (!collisionCamera)
+                /*if (!collisionCamera)
                 {
                     game.Camera.Eye = newCameraLocation;
                 }
@@ -656,7 +625,7 @@ namespace PrisonStep
                         regionCamera = TestRegion(newCameraLocation);
                     }
                     game.Camera.Eye = newCameraLocation;
-                }
+                }*/
                 deltaTotal -= delta;
             } while (deltaTotal > 0);
 

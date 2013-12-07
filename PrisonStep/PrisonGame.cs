@@ -153,6 +153,7 @@ namespace PrisonStep
             // Create a player object
             player = new Player(this, camera);
             player2 = new Player(this, camera2);
+            player2.Location = new Vector3(0,0, 100);
 
             //Particle system
             smokePlume = new SmokeParticleSystem3d(9);
@@ -178,6 +179,7 @@ namespace PrisonStep
             camera.Initialize();
             camera2.Initialize();
             player.Initialize();
+            player2.Initialize();
             ground.Initialize();
 
             //This section is lifted from the learning XNA 4.0 book. Partition the screen into two disjoint halves.
@@ -261,6 +263,7 @@ namespace PrisonStep
                 lineDraw.Clear();
 
                 player.Update(gameTime);
+                player2.Update(gameTime);
 
                 ground.Update(gameTime);
 
@@ -351,7 +354,7 @@ namespace PrisonStep
 
         }
 
-        public void DrawModel(GraphicsDeviceManager graphics, Model model, Matrix world)
+        public void DrawModel(GraphicsDeviceManager graphics, Model model, Matrix world, Camera inCamera)
         {
             Matrix[] transforms = new Matrix[model.Bones.Count];
             model.CopyAbsoluteBoneTransformsTo(transforms);
@@ -362,8 +365,8 @@ namespace PrisonStep
                 {
                     effect.EnableDefaultLighting();
                     effect.World = transforms[mesh.ParentBone.Index] * world;
-                    effect.View = camera.View;
-                    effect.Projection = camera.Projection;
+                    effect.View = inCamera.View;
+                    effect.Projection = inCamera.Projection;
                 }
                 mesh.Draw();
             }
