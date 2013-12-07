@@ -136,21 +136,6 @@ namespace PrisonStep
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
 
-            ground = new Ground(this);
-
-            // Create a player object
-            player = new Player(this);
-            player2 = new Player(this);
-
-            //Particle system
-            smokePlume = new SmokeParticleSystem3d(9);
-
-            // Some basic setup for the display window
-            this.IsMouseVisible = true;
-			//this.Window.AllowUserResizing = true;
-			this.graphics.PreferredBackBufferWidth = 1024;
-			this.graphics.PreferredBackBufferHeight = 768;
-
             // Camera settings
 
             camera = new Camera(graphics);
@@ -162,6 +147,21 @@ namespace PrisonStep
             camera.Eye = new Vector3(800, 180, 1053);
             camera.Center = new Vector3(275, 90, 1053);
             camera.FieldOfView = MathHelper.ToRadians(42);
+
+            ground = new Ground(this);
+
+            // Create a player object
+            player = new Player(this, camera);
+            player2 = new Player(this, camera2);
+
+            //Particle system
+            smokePlume = new SmokeParticleSystem3d(9);
+
+            // Some basic setup for the display window
+            this.IsMouseVisible = true;
+			//this.Window.AllowUserResizing = true;
+			this.graphics.PreferredBackBufferWidth = 1024;
+			this.graphics.PreferredBackBufferHeight = 768;
 
             lineDraw = new PSLineDraw(this, Camera);
             this.Components.Add(lineDraw);

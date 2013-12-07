@@ -21,6 +21,9 @@ namespace PrisonStep
         /// </summary>
         private const float DoorUnderRange = 40;
 
+        private Camera camera;
+        public Camera Camera { get { return camera; } }
+
         /// <summary>
         /// Game that uses this player
         /// </summary>
@@ -133,11 +136,11 @@ namespace PrisonStep
         #endregion
 
 
-        public Player(PrisonGame game)
+        public Player(PrisonGame game, Camera inCamera)
         {
             this.game = game;
+            this.camera = inCamera;
             victoria = new AnimatedModel(game, "Victoria");
-            //bazooka = new AnimatedModel(game, "PieBazooka");
 
             victoria.AddAssetClip("dance", "Victoria-dance");
             victoria.AddAssetClip("stance", "Victoria-stance");
@@ -168,8 +171,7 @@ namespace PrisonStep
         /// </summary>
         private void SetPlayerTransform()
         {
-            //if(!aiming)
-                transform = Matrix.CreateRotationY(orientation);
+            transform = Matrix.CreateRotationY(orientation);
             transform.Translation = location;
         }
 
@@ -219,174 +221,6 @@ namespace PrisonStep
 
             return "";
         }
-
-        #region oldUpdate
-
-        /*public void Update(GameTime gameTime)
-        {
-            float delta = (float)gameTime.ElapsedGameTime.TotalSeconds;
-            victoria.Update(gameTime.ElapsedGameTime.TotalSeconds);
-
-            //
-            // Part 1:  Compute a new orientation
-            //
-
-            Matrix deltaMatrix = victoria.DeltaMatrix;
-            float deltaAngle = (float)Math.Atan2(deltaMatrix.Backward.X, deltaMatrix.Backward.Z);
-            float newOrientation = orientation + deltaAngle;
-
-            //
-            // Part 2:  Compute a new location
-            //
-
-            // We are likely rotated from the angle the model expects to be in
-            // Determine that angle.
-            Matrix rootMatrix = victoria.RootMatrix;
-            float actualAngle = (float)Math.Atan2(rootMatrix.Backward.X, rootMatrix.Backward.Z);
-            Vector3 newLocation = location + Vector3.TransformNormal(victoria.DeltaPosition,
-                               Matrix.CreateRotationY(newOrientation - actualAngle));
-
-            //
-            // I'm just taking these here.  You'll likely want to add something 
-            // for collision detection instead.
-            //
-
-            location = newLocation;
-            orientation = newOrientation;
-            SetPlayerTransform();
-
-            // How much we will move the player
-            float translation = 0;
-            float rotation = 0;
-            
-            /*
-
-            KeyboardState keyboardState = Keyboard.GetState();
-
-            if (keyboardState.IsKeyDown(Keys.Left))
-            {
-                rotation += panRate * delta;
-            }
-
-            if (keyboardState.IsKeyDown(Keys.Right))
-            {
-                rotation -= panRate * delta;
-            }
-
-
-
-            if (keyboardState.IsKeyDown(Keys.Up))
-            {
-                translation += moveRate * delta;
-            }
-
-            if (keyboardState.IsKeyDown(Keys.Down))
-            {
-                translation -= moveRate * delta;
-            }
-
-            GamePadState gamePadState = GamePad.GetState(PlayerIndex.One);
-            rotation += -gamePadState.ThumbSticks.Right.X * panRate * delta;
-            translation += gamePadState.ThumbSticks.Right.Y * moveRate * delta;
-
-            end comment here
-
-            //
-            // Update the orientation
-            //
-
-            orientation += rotation;
-
-            //
-            // Update the location
-            //
-
-            Vector3 translateVector = new Vector3((float)Math.Sin(orientation), 0, (float)Math.Cos(orientation));
-            translateVector *= translation;
-
-            //Vector3 newLocation = location + translateVector;
-
-            bool collision = false;     // Until we know otherwise
-
-            string region = TestRegion(newLocation);
-            
-            // Slimed support
-            if (!game.Slimed && region == "R_Section6")
-            {
-                game.Slimed = true;
-            }
-            else if (game.Slimed && region == "R_Section1")
-            {
-                game.Slimed = false;
-            }
-
-            if (region == "")
-            {
-                // If not in a region, we have stepped out of bounds
-                collision = true;
-            }
-            else if (region.StartsWith("R_Door"))   // Are we in a door region
-            {
-                // What is the door number for the region we are in?
-                int dnum = int.Parse(region.Substring(6));
-
-                // Are we currently facing the door or walking through a 
-                // door?
-
-                bool underDoor;
-                if (DoorShouldBeOpen(dnum, location, transform.Backward, out underDoor))
-                {
-                    SetOpenDoor(dnum);
-                }
-                else
-                {
-                    SetOpenDoor(0);
-                }
-
-                if (underDoor)
-                {
-                    // is the door actually open right now?
-                    bool isOpen = false;
-                    foreach (PrisonModel model in game.PhibesModels)
-                    {
-                        if (model.DoorIsOpen(dnum))
-                        {
-                            isOpen = true;
-                            break;
-                        }
-                    }
-
-                    if (!isOpen)
-                        collision = true;
-                }
-            }
-            else if (openDoor > 0)
-            {
-                // Indicate none are open
-                SetOpenDoor(0);
-            }
-
-            if (!collision)
-            {
-                location = newLocation;
-            }
-
-            SetPlayerTransform();
-
-            //
-            // Make the camera follow the player
-            //
-
-            //game.Camera.Eye = location + new Vector3(0, 180, 0);
-            //game.Camera.Center = game.Camera.Eye + transform.Backward + new Vector3(0, -0.1f, 0);
-
-            // Retain the game pad state
-            lastGPS = gamePadState;
-
-
-        }*/
-
-        #endregion oldUpdate
 
         public void Update(GameTime gameTime)
         {
@@ -592,8 +426,6 @@ namespace PrisonStep
                         }
                         else
                         {
-                            //int spineInd = victoria.Model.Bones["Bip01 Spine1"].Index;
-                            //victoria.AbsoTransforms[spineInd].Backward = new Vector3(orientation, 0, 0);
                             pan = 0;
                             state = States.Aim;
                         }
@@ -797,11 +629,9 @@ namespace PrisonStep
 
                 SetPlayerTransform();
 
-                //get the new camera location relative to the player
-                Vector3 newCameraLocation = Vector3.Transform(new Vector3(0, 180, -200), transform);
-                game.Camera.Center = location + new Vector3(0, 100, 0);
-
                 bool collisionCamera = false;
+                camera.Center = location;
+                Vector3 newCameraLocation = location + new Vector3(0, 100, 0);
                 string regionCamera = TestRegion(newCameraLocation);
 
                 if (regionCamera == "")
