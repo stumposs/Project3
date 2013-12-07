@@ -114,24 +114,19 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Alien.cs" />
     <Compile Include="AnimatedModel.cs" />
     <Compile Include="AnimationPlayer.cs" />
     <Compile Include="BoundingCylinder.cs" />
-    <Compile Include="Dalek.cs" />
-    <Compile Include="Enemy.cs" />
     <Compile Include="ExplosionParticleSystem3d.cs" />
+    <Compile Include="Ground.cs" />
     <Compile Include="Particle3d.cs" />
     <Compile Include="ParticleSystem3d.cs" />
-    <Compile Include="Pies.cs" />
     <Compile Include="Player.cs" />
-    <Compile Include="PrisonModel.cs" />
     <Compile Include="Camera.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="PrisonGame.cs" />
     <Compile Include="PSLineDraw.cs" />
-    <Compile Include="Spit.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Game.ico" />

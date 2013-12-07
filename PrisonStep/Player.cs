@@ -177,57 +177,6 @@ namespace PrisonStep
         public void LoadContent(ContentManager content)
         {
             victoria.LoadContent(content);
-            //bazooka.LoadContent(content);
-
-            Model model = content.Load<Model>("AntonPhibesCollision");
-
-            Matrix[] M = new Matrix[model.Bones.Count];
-            model.CopyAbsoluteBoneTransformsTo(M);
-
-            foreach (ModelMesh mesh in model.Meshes)
-            {
-                // For accumulating the triangles for this mesh
-                List<Vector2> triangles = new List<Vector2>();
-
-                // Loop over the mesh parts
-                foreach(ModelMeshPart meshPart in mesh.MeshParts)
-                {
-                    // 
-                    // Obtain the vertices for the mesh part
-                    //
-
-                    int numVertices = meshPart.VertexBuffer.VertexCount;
-                    VertexPositionColorTexture[] verticesRaw = new VertexPositionColorTexture[numVertices];
-                    meshPart.VertexBuffer.GetData<VertexPositionColorTexture>(verticesRaw);
-
-                    //
-                    // Obtain the indices for the mesh part
-                    //
-
-                    int numIndices = meshPart.IndexBuffer.IndexCount;
-                    short [] indices = new short[numIndices];
-                    meshPart.IndexBuffer.GetData<short>(indices);
-
-                    //
-                    // Build the list of triangles
-                    //
-
-                    for (int i = 0; i < meshPart.PrimitiveCount * 3; i++)
-                    {
-                        // The actual index is relative to a supplied start position
-                        int index = i + meshPart.StartIndex;
-
-                        // Transform the vertex into world coordinates
-                        Vector3 v = Vector3.Transform(verticesRaw[indices[index] + meshPart.VertexOffset].Position, M[mesh.ParentBone.Index]);
-                        triangles.Add(new Vector2(v.X, v.Z));
-                    }
-
-                }
-
-                regions[mesh.Name] = triangles;
-            }
-
-            //AnimationPlayer player = victoria.PlayClip("walk");
         }
 
         public string TestRegion(Vector3 v3)
@@ -829,73 +778,16 @@ namespace PrisonStep
                 // Update the location
                 //
 
-                //Vector3 newLocation = location + translateVector;
 
                 bool collision = false;     // Until we know otherwise
 
                 string region = TestRegion(newLocation);
                 playerRegion = region;
 
-                // Slimed support
-                //if (!game.Slimed && region == "R_Section6")
-                //{
-                //    game.Slimed = true;
-                //}
-                
-                if (game.Slimed && region == "R_Section1")
-                {
-                    game.Slimed = false;
-                }
-
-                if (game.NeedPies && region == "R_Section1")
-                {
-                    game.ResetPies();
-                }
-
                 if (region == "")
                 {
                     // If not in a region, we have stepped out of bounds
                     collision = true;
-                }
-                else if (region.StartsWith("R_Door"))   // Are we in a door region
-                {
-                    // What is the door number for the region we are in?
-                    int dnum = int.Parse(region.Substring(6));
-
-                    // Are we currently facing the door or walking through a 
-                    // door?
-
-                    bool underDoor;
-                    if (DoorShouldBeOpen(dnum, location, transform.Backward, out underDoor))
-                    {
-                        SetOpenDoor(dnum);
-                    }
-                    else
-                    {
-                        SetOpenDoor(0);
-                    }
-
-                    if (underDoor)
-                    {
-                        // is the door actually open right now?
-                        bool isOpen = false;
-                        foreach (PrisonModel model in game.PhibesModels)
-                        {
-                            if (model.DoorIsOpen(dnum))
-                            {
-                                isOpen = true;
-                                break;
-                            }
-                        }
-
-                        if (!isOpen)
-                            collision = true;
-                    }
-                }
-                else if (openDoor > 0)
-                {
-                    // Indicate none are open
-                    SetOpenDoor(0);
                 }
 
                 if (!collision)
@@ -906,9 +798,6 @@ namespace PrisonStep
                 SetPlayerTransform();
 
                 //get the new camera location relative to the player
-                //Vector3 newCameraLocation = location + new Vector3(0, 180, -40);
-                //game.Camera.Center = game.Camera.Eye + transform.Backward + new Vector3(0, -0.1f, 0);
-
                 Vector3 newCameraLocation = Vector3.Transform(new Vector3(0, 180, -200), transform);
                 game.Camera.Center = location + new Vector3(0, 100, 0);
 
@@ -940,30 +829,7 @@ namespace PrisonStep
                 deltaTotal -= delta;
             } while (deltaTotal > 0);
 
-            //check the current pie locations
-
-            Vector3 pieLocation = game.Pies.PieModel.AbsoTransforms[game.Pies.PieModel.Model.Bones["Pie1"].Index].Translation;
-            string regionPie = TestRegion(pieLocation);
-            if (regionPie == "" && game.Pies.PieStates[0] == Pies.pieState.firing)
-            {
-                game.Pies.PieHitWall(1);
-            }
-
-            pieLocation = game.Pies.PieModel.AbsoTransforms[game.Pies.PieModel.Model.Bones["Pie2top01"].Index].Translation;
-            regionPie = TestRegion(pieLocation);
-            if (regionPie == "" && game.Pies.PieStates[1] == Pies.pieState.firing)
-            {
-                game.Pies.PieHitWall(2);
-            }
-
-            pieLocation = game.Pies.PieModel.AbsoTransforms[game.Pies.PieModel.Model.Bones["Pie3top"].Index].Translation;
-            regionPie = TestRegion(pieLocation);
-            if (regionPie == "" && game.Pies.PieStates[2] == Pies.pieState.firing)
-            {
-                game.Pies.PieHitWall(3);
-            }
-
-
+ 
             //do other keyboard based actions
 
             if (keyboardState.IsKeyDown(Keys.D1) && lastKeyboardState.IsKeyUp(Keys.D1))
@@ -988,11 +854,6 @@ namespace PrisonStep
                 {
                     crouch = true;
                 }
-            }
-
-            if (keyboardState.IsKeyDown(Keys.Space) && lastKeyboardState.IsKeyUp(Keys.Space) && aiming)
-            {
-                game.Pies.FirePie();
             }
 
             if (keyboardState.IsKeyDown(Keys.A))
@@ -1045,121 +906,6 @@ namespace PrisonStep
             victoria.Draw(graphics, gameTime, transform, inCamera.View, inCamera.Projection);
             game.Bazooka.Draw(graphics, gameTime, game.BazTransform, inCamera.View, inCamera.Projection);
 
-        }
-
-        /// <summary>
-        /// This is the logic that determines if a door should be open.  This is 
-        /// based on a position and a direction we are traveling.  
-        /// </summary>
-        /// <param name="dnum">Door number we are interested in (1-5)</param>
-        /// <param name="loc">A location near the door</param>
-        /// <param name="dir">Direction we are currently facing as a vector.</param>
-        /// <param name="doorVector">A vector pointing throught the door.</param>
-        /// <param name="doorCenter">The center of the door.</param>
-        /// <param name="under">Return value - indicates we are under the door</param>
-        /// <returns>True if we are under the door</returns>
-        private bool DoorShouldBeOpen(int dnum, Vector3 loc, Vector3 dir, out bool under)
-        {
-            Vector3 doorCenter;
-            Vector3 doorVector;
-
-            // I need to know information about the doors.  This 
-            // is the location and a vector through the door for each door.
-            switch (dnum)
-            {
-                case 1:
-                    doorCenter = new Vector3(218, 0, 1023);
-                    doorVector = new Vector3(1, 0, 0);
-                    break;
-
-                case 2:
-                    doorCenter = new Vector3(-11, 0, -769);
-                    doorVector = new Vector3(0, 0, 1);
-                    break;
-
-                case 3:
-                    doorCenter = new Vector3(587, 0, -999);
-                    doorVector = new Vector3(1, 0, 0);
-                    break;
-
-                case 4:
-                    doorCenter = new Vector3(787, 0, -763);
-                    doorVector = new Vector3(0, 0, 1);
-                    break;
-
-                case 5:
-                default:
-                    doorCenter = new Vector3(1187, 0, -1218);
-                    doorVector = new Vector3(0, 0, 1);
-                    break;
-            }
-
-            // I want the door vector to indicate the direction we are doing through the
-            // door.  This depends on the side of the center we are on.
-            Vector3 toDoor = doorCenter - loc;
-            if (Vector3.Dot(toDoor, doorVector) < 0)
-            {
-                doorVector = -doorVector;
-            }
-
-
-            // Determine if we are under the door
-            // Determine points after the center where we are 
-            // considered to be under the door
-            Vector3 doorBefore = doorCenter - doorVector * DoorUnderRange;
-            Vector3 doorAfter = doorCenter + doorVector * DoorUnderRange;
-            under = false;
-
-            // If we have passed the point before the door, a vector 
-            // to our position from that point will be pointing within 
-            // 90 degrees of the door vector.  
-            if (Vector3.Dot(loc - doorAfter, doorVector) <= 0 &&
-                Vector3.Dot(loc - doorBefore, doorVector) >= 0)
-            {
-                under = true;
-                return true;
-            }
-
-            // Are we facing the door?
-            if (Vector3.Dot(dir, doorVector) >= 0)
-            {
-                // We are, so the door should be open
-                return true;
-            }
-
-            return false;
-        }
-
-
-        /// <summary>
-        /// Set the current open/opening door
-        /// </summary>
-        /// <param name="dnum">Door to set open or 0 if none</param>
-        private void SetOpenDoor(int dnum)
-        {
-            // Is this already indicated?
-            if (openDoor == dnum)
-                return;
-
-            // Is a door other than this already open?
-            // If so, make it close
-            if (openDoor > 0 && openDoor != dnum)
-            {
-                foreach (PrisonModel model in game.PhibesModels)
-                {
-                    model.SetDoor(openDoor, false);
-                }
-            }
-
-            // Make this the open door and flag it as open
-            openDoor = dnum;
-            if (openDoor > 0)
-            {
-                foreach (PrisonModel model in game.PhibesModels)
-                {
-                    model.SetDoor(openDoor, true);
-                }
-            }
         }
 
         private float GetDesiredSpeed(ref KeyboardState keyboardState, ref GamePadState gamePadState)

@@ -43,28 +43,17 @@ namespace PrisonStep
         /// </summary>
         KeyboardState lastKeyboardState;
 
+        private Ground ground;
+        public Ground Ground { get { return ground; } }
+
         /// <summary>
         /// The player in your game is modeled with this class
         /// </summary>
         private Player player;
         public Player Player { get { return player; } }
 
-        /// <summary>
-        /// The Dalek NPC
-        /// </summary>
-        private Dalek dalek;
-        public Dalek Dalek { get { return dalek; } }
-
-        /// <summary>
-        /// The Alien NPC
-        /// </summary>
-        private Alien alien;
-        public Alien Alien { get { return alien; } }
-
-        /// <summary>
-        /// This is the actual model we are using for the prison
-        /// </summary>
-        private List<PrisonModel> phibesModels = new List<PrisonModel>();
+        private Player player2;
+        public Player Player2 { get { return player; } }
 
         private PSLineDraw lineDraw;
 
@@ -81,10 +70,6 @@ namespace PrisonStep
 
         public PSLineDraw LineDraw { get { return lineDraw; } }
 
-        public List<PrisonModel> PhibesModels
-        {
-            get { return phibesModels; }
-        }
         #endregion
 
         private bool slimed = false;
@@ -104,17 +89,6 @@ namespace PrisonStep
         /// </summary>
         private Matrix bazTransform;
         public Matrix BazTransform { get { return bazTransform; } set { bazTransform = value; } }
-
-        /// <summary>
-        /// The pies in the game.
-        /// </summary>
-        private Pies pies;
-        public Pies Pies { get { return pies; } }
-
-        /// <summary>
-        /// list of old pie objects that have been fired
-        /// </summary>
-        private List<Pies> oldPies = new List<Pies>();
 
         /// <summary>
         /// Tells us how many pies have been fired total before we must return to the control room
@@ -162,17 +136,11 @@ namespace PrisonStep
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
 
-            // Create objects for the parts of the ship
-            for(int i=1;  i<=6;  i++)
-            {
-                phibesModels.Add(new PrisonModel(this, i));
-            }
+            ground = new Ground(this);
 
             // Create a player object
             player = new Player(this);
-            pies = new Pies(this);
-            dalek = new Dalek(this);
-            alien = new Alien(this);
+            player2 = new Player(this);
 
             //Particle system
             smokePlume = new SmokeParticleSystem3d(9);
@@ -210,6 +178,8 @@ namespace PrisonStep
             camera.Initialize();
             camera2.Initialize();
             player.Initialize();
+            ground.Initialize();
+
             //This section is lifted from the learning XNA 4.0 book. Partition the screen into two disjoint halves.
             Viewport vp1 = GraphicsDevice.Viewport;
             Viewport vp2 = GraphicsDevice.Viewport;
@@ -235,18 +205,11 @@ namespace PrisonStep
             //bazooka = Content.Load<Model>("PieBazooka");
             bazooka = new AnimatedModel(this, "PieBazooka");
             bazooka.LoadContent(Content);
-            pies.LoadContent(Content);
-            pies.LoadPiesInBazooka();
             player.LoadContent(Content);
-            dalek.LoadContent(Content);
-            alien.LoadContent(Content);
+            player2.LoadContent(Content);
+            ground.LoadContent(Content);
 
             smokePlume.LoadContent(Content);
-
-            foreach (PrisonModel model in phibesModels)
-            {
-                model.LoadContent(Content);
-            }
 
             spriteBatch = new SpriteBatch(GraphicsDevice);
             UIFont = Content.Load<SpriteFont>("UIFont");
@@ -296,36 +259,11 @@ namespace PrisonStep
                     current = GameState.results;
 
                 lineDraw.Clear();
-                /*
-                lineDraw.Crosshair(new Vector3(0, 100, 0), 20, Color.White);
-
-                lineDraw.Begin();
-                lineDraw.Vertex(new Vector3(0, 150, 0), Color.White);
-                lineDraw.Vertex(new Vector3(50, 100, 0), Color.Red);
-                lineDraw.End();*/
-
-                pies.Update(gameTime);
-                foreach (Pies pie in oldPies)
-                {
-                    pie.Update(gameTime);
-                }
 
                 player.Update(gameTime);
-                dalek.Update(gameTime);
-                alien.Update(gameTime);
 
-                if (pies.PieCheckReload())
-                {
-                    oldPies.Add(pies);
-                    pies = new Pies(this);
-                    pies.LoadContent(Content);
-                    pies.LoadPiesInBazooka();
-                }
+                ground.Update(gameTime);
 
-                foreach (PrisonModel model in phibesModels)
-                {
-                    model.Update(gameTime);
-                }
 
                 camera.Update(gameTime);
                 camera2.Update(gameTime);
@@ -392,26 +330,14 @@ namespace PrisonStep
             GraphicsDevice.BlendState = BlendState.Opaque;
             GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
-            foreach (PrisonModel model in phibesModels)
-            {
-                model.Draw(graphics, gameTime, inCamera);
-            }
-
-            pies.Draw(graphics, gameTime, inCamera);
-            foreach (Pies pie in oldPies)
-            {
-                pie.Draw(graphics, gameTime, inCamera);
-            }
+            ground.Draw(graphics, gameTime, inCamera);
 
             player.Draw(graphics, gameTime, inCamera);
-            dalek.Draw(graphics, gameTime, inCamera);
-            alien.Draw(graphics, gameTime, inCamera);
+            player2.Draw(graphics, gameTime, inCamera);
 
-            smokePlume.Draw(GraphicsDevice, camera);
+            smokePlume.Draw(GraphicsDevice, inCamera);
 
             GraphicsDevice.BlendState = BlendState.AlphaBlend;
-            dalek.Spit.SpitModel.Draw(graphics, gameTime, dalek.Spit.Transform, inCamera.View, inCamera.Projection);
-            alien.Spit.SpitModel.Draw(graphics, gameTime, alien.Spit.Transform, inCamera.View, inCamera.Projection);
             GraphicsDevice.BlendState = BlendState.Opaque;
 
             base.Draw(gameTime);
@@ -440,28 +366,7 @@ namespace PrisonStep
                     effect.Projection = camera.Projection;
                 }
                 mesh.Draw();
-
-                /*foreach (Effect effect in mesh.Effects)
-                {
-                    mesh.Effects = Content.Load<Effect>("PhibesEffect2");
-                    Matrix temp = world;
-                    effect.Parameters["World"].SetValue(temp);
-                    effect.Parameters["View"].SetValue(Camera.View);
-                    effect.Parameters["Projection"].SetValue(Camera.Projection);
-                }
-                mesh.Draw();*/
             }
-        }
-
-        public void ResetPies()
-        {
-            totalPiesFired = 0;
-            needPies = false;
-
-            oldPies.Add(pies);
-            pies = new Pies(this);
-            pies.LoadContent(Content);
-            pies.LoadPiesInBazooka();
         }
     }
 }

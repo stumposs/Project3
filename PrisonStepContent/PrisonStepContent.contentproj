@@ -37,52 +37,6 @@
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="AntonPhibes1.FBX">
-      <Name>AntonPhibes1</Name>
-      <Importer>FbxImporter</Importer>
-      <Processor>AnimationProcessor</Processor>
-      <ProcessorParameters_CustomMaterialProcessor>PhibesMaterialProcessor</ProcessorParameters_CustomMaterialProcessor>
-      <ProcessorParameters_Section>1</ProcessorParameters_Section>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="AntonPhibes2.FBX">
-      <Name>AntonPhibes2</Name>
-      <Importer>FbxImporter</Importer>
-      <Processor>AnimationProcessor</Processor>
-      <ProcessorParameters_CustomMaterialProcessor>PhibesMaterialProcessor</ProcessorParameters_CustomMaterialProcessor>
-      <ProcessorParameters_Section>2</ProcessorParameters_Section>
-    </Compile>
-    <Compile Include="AntonPhibes3.FBX">
-      <Name>AntonPhibes3</Name>
-      <Importer>FbxImporter</Importer>
-      <Processor>AnimationProcessor</Processor>
-      <ProcessorParameters_CustomMaterialProcessor>PhibesMaterialProcessor</ProcessorParameters_CustomMaterialProcessor>
-      <ProcessorParameters_Section>3</ProcessorParameters_Section>
-    </Compile>
-    <Compile Include="AntonPhibes4.FBX">
-      <Name>AntonPhibes4</Name>
-      <Importer>FbxImporter</Importer>
-      <Processor>AnimationProcessor</Processor>
-      <ProcessorParameters_CustomMaterialProcessor>PhibesMaterialProcessor</ProcessorParameters_CustomMaterialProcessor>
-      <ProcessorParameters_Section>4</ProcessorParameters_Section>
-    </Compile>
-    <Compile Include="AntonPhibes5.FBX">
-      <Name>AntonPhibes5</Name>
-      <Importer>FbxImporter</Importer>
-      <Processor>AnimationProcessor</Processor>
-      <ProcessorParameters_CustomMaterialProcessor>PhibesMaterialProcessor</ProcessorParameters_CustomMaterialProcessor>
-      <ProcessorParameters_Section>5</ProcessorParameters_Section>
-    </Compile>
-    <Compile Include="AntonPhibes6.FBX">
-      <Name>AntonPhibes6</Name>
-      <Importer>FbxImporter</Importer>
-      <Processor>AnimationProcessor</Processor>
-      <ProcessorParameters_CustomMaterialProcessor>PhibesMaterialProcessor</ProcessorParameters_CustomMaterialProcessor>
-      <ProcessorParameters_Section>6</ProcessorParameters_Section>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
     <Reference Include="Microsoft.Xna.Framework.Content.Pipeline.AudioImporters, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=None" />
     <Reference Include="Microsoft.Xna.Framework.Content.Pipeline.EffectImporter, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=None" />
     <Reference Include="Microsoft.Xna.Framework.Content.Pipeline.FBXImporter, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=None" />
@@ -131,13 +85,6 @@
       <Project>{FF2FBE94-50B5-4E78-9592-B95F32A8881E}</Project>
       <Name>AnimationPipeline</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="AntonPhibesCollision.FBX">
-      <Name>AntonPhibesCollision</Name>
-      <Importer>FbxImporter</Importer>
-      <Processor>ModelProcessor</Processor>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Victoria.FBX">
@@ -284,52 +231,11 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Alien-catcheat.FBX">
-      <Name>Alien-catcheat</Name>
+    <Compile Include="ground.fbx">
+      <Name>ground</Name>
       <Importer>FbxImporter</Importer>
-      <Processor>AnimationProcessor</Processor>
-      <ProcessorParameters_Skinned>True</ProcessorParameters_Skinned>
+      <Processor>ModelProcessor</Processor>
     </Compile>
-    <Compile Include="Alien-ob.FBX">
-      <Name>Alien-ob</Name>
-      <Importer>FbxImporter</Importer>
-      <Processor>AnimationProcessor</Processor>
-      <ProcessorParameters_Skinned>True</ProcessorParameters_Skinned>
-    </Compile>
-    <Compile Include="Alien-stance.FBX">
-      <Name>Alien-stance</Name>
-      <Importer>FbxImporter</Importer>
-      <Processor>AnimationProcessor</Processor>
-      <ProcessorParameters_Skinned>True</ProcessorParameters_Skinned>
-    </Compile>
-    <Compile Include="Alien-trantrum.FBX">
-      <Name>Alien-trantrum</Name>
-      <Importer>FbxImporter</Importer>
-      <Processor>AnimationProcessor</Processor>
-      <ProcessorParameters_Skinned>True</ProcessorParameters_Skinned>
-    </Compile>
-    <Compile Include="Alien-walkloop.FBX">
-      <Name>Alien-walkloop</Name>
-      <Importer>FbxImporter</Importer>
-      <Processor>AnimationProcessor</Processor>
-      <ProcessorParameters_Skinned>True</ProcessorParameters_Skinned>
-    </Compile>
-    <Compile Include="Alien-walkstart.FBX">
-      <Name>Alien-walkstart</Name>
-      <Importer>FbxImporter</Importer>
-      <Processor>AnimationProcessor</Processor>
-      <ProcessorParameters_Skinned>True</ProcessorParameters_Skinned>
-    </Compile>
-    <Compile Include="Alien.FBX">
-      <Name>Alien</Name>
-      <Importer>FbxImporter</Importer>
-      <Processor>AnimationProcessor</Processor>
-      <ProcessorParameters_Section>6</ProcessorParameters_Section>
-      <ProcessorParameters_CustomMaterialProcessor>PhibesMaterialProcessor</ProcessorParameters_CustomMaterialProcessor>
-      <ProcessorParameters_Skinned>True</ProcessorParameters_Skinned>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Lights.fx">
       <Name>Lights</Name>
       <Importer>EffectImporter</Importer>
@@ -349,6 +255,13 @@
   <ItemGroup>
     <Compile Include="smoke.bmp">
       <Name>smoke</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="snow.png">
+      <Name>snow</Name>
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
     </Compile>
