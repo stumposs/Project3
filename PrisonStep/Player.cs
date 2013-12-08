@@ -15,12 +15,6 @@ namespace PrisonStep
     {
         #region Fields
 
-        /// <summary>
-        /// This is a range from the door center that is considered
-        /// to be under the door.  This much either side.
-        /// </summary>
-        private const float DoorUnderRange = 40;
-
         private Camera camera;
         public Camera Camera { get { return camera; } }
 
@@ -46,6 +40,8 @@ namespace PrisonStep
         /// </summary>
         private float orientation = 1.6f;
 
+        private float upDownAngle = 0.0f;
+
         /// <summary>
         /// The player transformation matrix. Places the player where they need to be.
         /// </summary>
@@ -58,70 +54,17 @@ namespace PrisonStep
         private float panRate = 2;
 
         /// <summary>
-        /// The player move rate in centimeters per second
-        /// </summary>
-        private float moveRate = 500;
-
-        /// <summary>
-        /// Id for a door we are opening or 0 if none.
-        /// </summary>
-        private int openDoor = 0;
-
-        /// <summary>
         /// Keeps track of the last game pad state
         /// </summary>
         GamePadState lastGPS;
 
-        /// <summary>
-        /// Tells if the player has chosen to wield the bazooka or not.
-        /// </summary>
-        private bool wieldBazooka = false;
-        public bool WieldBazooka { get { return wieldBazooka; } }
-
-        /// <summary>
-        /// Tells if the player has chosen to crouch;
-        /// </summary>
-        private bool crouch = false;
-        public bool Crouch { get { return crouch; } }
-
-        /// <summary>
-        /// Tells us if the bazooka is raised and we are aiming
-        /// </summary>
-        private bool aiming = false;
-        public bool Aiming { get { return aiming; } }
-
-        /// <summary>
-        /// Stores the angle we are in when we start aiming
-        /// </summary>
-        private float aimOrient = 0;
-        public float AimOrient { get { return aimOrient; } }
-
-        /// <summary>
-        /// Stores the angle we are aiming at;
-        /// </summary>
-        private float aimAngle = 0;
-        public float AimAngle { get { return aimAngle; } }
-
-        /// <summary>
-        /// The previous keyboard state
-        /// </summary>
-        KeyboardState lastKeyboardState;
-
-        private enum States { Start, StanceStart, Stance, Turn, TurnLoopStart, TurnLoop, WalkStart, WalkLoopStart, WalkLoop, 
-            StanceRaised, CrouchBazooka, WalkStartBazooka, WalkLoopStartBazooka, WalkLoopBazooka, TurnBazooka, TurnLoopStartBazooka, TurnLoopBazooka, Aim }
+        private enum States { Start, StanceStart, Stance, WalkStart, WalkLoopStart, WalkLoop}
         private States state = States.Start;
 
         /// <summary>
         /// Our animated model
         /// </summary>
-        private AnimatedModel victoria;
-
-        private AnimatedModel pies;
-
-        //private AnimatedModel bazooka;
-
-        private Dictionary<string, List<Vector2>> regions = new Dictionary<string, List<Vector2>>();
-        public Dictionary<string, List<Vector2>> Regions { get { return regions; } }
+        private AnimatedModel animatedModel;
 
         private string playerRegion;
 
@@ -140,21 +83,7 @@ namespace PrisonStep
         {
             this.game = game;
             this.camera = inCamera;
-            victoria = new AnimatedModel(game, "Victoria");
-
-            victoria.AddAssetClip("dance", "Victoria-dance");
-            victoria.AddAssetClip("stance", "Victoria-stance");
-            victoria.AddAssetClip("walk", "Victoria-walk");
-            victoria.AddAssetClip("walkstart", "Victoria-walkstart");
-            victoria.AddAssetClip("walkloop", "Victoria-walkloop");
-            victoria.AddAssetClip("leftturn", "Victoria-leftturn");
-            victoria.AddAssetClip("rightturn", "Victoria-rightturn");
-
-            victoria.AddAssetClip("crouchbazooka", "Victoria-crouchbazooka");
-            victoria.AddAssetClip("lowerbazooka", "Victoria-lowerbazooka");
-            victoria.AddAssetClip("raisebazooka", "Victoria-raisebazooka");
-            victoria.AddAssetClip("walkloopbazooka", "Victoria-walkloopbazooka");
-            victoria.AddAssetClip("walkstartbazooka", "Victoria-walkstartbazooka");
+            animatedModel = new AnimatedModel(game, "dalek");
             SetPlayerTransform();
 
             playerCollision = new BoundingCylinder(game, location);
@@ -178,7 +107,7 @@ namespace PrisonStep
 
         public void LoadContent(ContentManager content)
         {
-            victoria.LoadContent(content);
+            animatedModel.LoadContent(content);
         }
 
         public string TestRegion(Vector3 v3)
@@ -218,17 +147,9 @@ namespace PrisonStep
                         break;
 
                     case States.StanceStart:
-                        victoria.PlayClip("stance");
+                        //animatedModel.PlayClip("stance");
                         location.Y = 0;
-                        if (!wieldBazooka)
-                        {
-                            state = States.Stance;
-                        }
-                        else if (wieldBazooka)
-                        {
-                            victoria.PlayClip("raisebazooka");
-                            state = States.StanceRaised;
-                        }
+                        state = States.Stance;
                         break;
 
                     case States.Stance:
@@ -239,14 +160,14 @@ namespace PrisonStep
                         if (speed > 0)
                         {
                             // We need to leave the stance state and start walking
-                            victoria.PlayClip("walkloop");
-                            victoria.Player.Speed = speed;
+                            //animatedModel.PlayClip("walkloop");
+                            animatedModel.Player.Speed = speed;
                             state = States.WalkLoop;
                         }
 
                         if (pan != 0)
                         {
-                            victoria.Player.Speed = pan;
+                            animatedModel.Player.Speed = pan;
                             state = States.TurnLoopStart;
                         }
 
@@ -255,13 +176,13 @@ namespace PrisonStep
                     case States.TurnLoopStart:
                         if (pan > 0)
                         {
-                            victoria.PlayClip("rightturn").Speed = GetDesiredTurnRate(ref keyboardState, ref gamePadState);
+                            animatedModel.PlayClip("rightturn").Speed = GetDesiredTurnRate(ref keyboardState, ref gamePadState);
                             state = States.TurnLoop;
                             break;
                         }
                         else if (pan < 0)
                         {
-                            victoria.PlayClip("leftturn").Speed = GetDesiredTurnRate(ref keyboardState, ref gamePadState);
+                            animatedModel.PlayClip("leftturn").Speed = GetDesiredTurnRate(ref keyboardState, ref gamePadState);
                             state = States.TurnLoop;
                             break;
                         }
@@ -270,9 +191,9 @@ namespace PrisonStep
                         break;
 
                     case States.TurnLoop:
-                        if (delta > victoria.Player.Clip.Duration - victoria.Player.Time)
+                        if (delta > animatedModel.Player.Clip.Duration - animatedModel.Player.Time)
                         {
-                            delta = victoria.Player.Clip.Duration - victoria.Player.Time;
+                            delta = animatedModel.Player.Clip.Duration - animatedModel.Player.Time;
 
                             // The clip is done after this update
                             state = States.TurnLoopStart;
@@ -287,14 +208,14 @@ namespace PrisonStep
                         }
                         else
                         {
-                            victoria.Player.Speed = pan;
+                            animatedModel.Player.Speed = pan;
                         }
                         break;
 
                     case States.WalkStart:
-                        if (delta > victoria.Player.Clip.Duration - victoria.Player.Time)
+                        if (delta > animatedModel.Player.Clip.Duration - animatedModel.Player.Time)
                         {
-                            delta = victoria.Player.Clip.Duration - victoria.Player.Time;
+                            delta = animatedModel.Player.Clip.Duration - animatedModel.Player.Time;
 
                             // The clip is done after this update
                             state = States.WalkLoopStart;
@@ -310,21 +231,15 @@ namespace PrisonStep
                         }
                         else
                         {
-                            victoria.Player.Speed = speed;
+                            animatedModel.Player.Speed = speed;
                         }
 
                         break;
-
-                    case States.WalkLoopStart:
-                        victoria.PlayClip("walkloop").Speed = GetDesiredSpeed(ref keyboardState, ref gamePadState);
-                        state = States.WalkLoop;
-                        break;
-
                     case States.WalkLoop:
                         location.Y = 0;
-                        if (delta > victoria.Player.Clip.Duration - victoria.Player.Time)
+                        if (delta > animatedModel.Player.Clip.Duration - animatedModel.Player.Time)
                         {
-                            delta = victoria.Player.Clip.Duration - victoria.Player.Time;
+                            delta = animatedModel.Player.Clip.Duration - animatedModel.Player.Time;
 
                             // The clip is done after this update
                             state = States.WalkLoopStart;
@@ -339,105 +254,10 @@ namespace PrisonStep
                         }
                         else
                         {
-                            victoria.Player.Speed = speed;
+                            animatedModel.Player.Speed = speed;
                         }
 
                         break;
-
-                    case States.StanceRaised:
-                        speed = GetDesiredSpeed(ref keyboardState, ref gamePadState);
-                        pan = GetDesiredTurnRate(ref keyboardState, ref gamePadState);
-                        strafe = GetDesiredStrafe(ref keyboardState, ref gamePadState);
-
-                        location.Y = 0;
-
-                        if (speed > 0)
-                        {
-                            // We need to leave the stance state and start walking
-                            victoria.PlayClip("lowerbazooka");
-                            victoria.Player.Speed = speed;
-                            state = States.WalkLoopBazooka;
-                        }
-
-                        if (pan != 0 && !aiming)
-                        {
-                            victoria.Player.Speed = pan;
-                            victoria.PlayClip("lowerbazooka");
-                            state = States.TurnLoopStartBazooka;
-                        }
-
-                        if(aiming)
-                        {
-                            pan = 0;
-                            state = States.Aim;
-                        }
-
-                        if (!wieldBazooka)
-                        {
-                            victoria.PlayClip("lowerbazooka");
-                            state = States.Stance;
-                        }
-
-                        if (crouch)
-                        {
-                            victoria.PlayClip("crouchbazooka");
-                            state = States.CrouchBazooka;
-                        }
-
-                        break;
-
-                    case States.Aim:
-                        if (!keyboardState.IsKeyDown(Keys.LeftShift))
-                        {
-                            pan = 0;
-                            state = States.StanceRaised;
-                        }
-                        else
-                        {
-                            pan = 0;
-                            state = States.Aim;
-                        }
-
-                        break;
-
-                    case States.CrouchBazooka:
-                        if (delta > victoria.Player.Clip.Duration - victoria.Player.Time)
-                        {
-                            delta = victoria.Player.Clip.Duration - victoria.Player.Time;
-
-                            // The clip is done after this update
-                            crouch = false;
-                            victoria.PlayClip("raisebazooka");
-                            state = States.StanceRaised;
-                        }
-
-                        break;
-
-                    case States.TurnLoopStartBazooka:
-                        if (pan > 0)
-                        {
-                            victoria.PlayClip("rightturn").Speed = GetDesiredTurnRate(ref keyboardState, ref gamePadState);
-                            state = States.TurnLoopBazooka;
-                            break;
-                        }
-                        else if (pan < 0)
-                        {
-                            victoria.PlayClip("leftturn").Speed = GetDesiredTurnRate(ref keyboardState, ref gamePadState);
-                            state = States.TurnLoopBazooka;
-                            break;
-                        }
-                        state = States.TurnLoopBazooka;
-
-                        break;
-
-                    case States.TurnLoopBazooka:
-                        if (delta > victoria.Player.Clip.Duration - victoria.Player.Time)
-                        {
-                            delta = victoria.Player.Clip.Duration - victoria.Player.Time;
-
-                            // The clip is done after this update
-                            state = States.TurnLoopStartBazooka;
-                        }
 
                         strafe = GetDesiredStrafe(ref keyboardState, ref gamePadState);
                         pan = GetDesiredTurnRate(ref keyboardState, ref gamePadState);
@@ -448,17 +268,17 @@ namespace PrisonStep
                         }
                         else
                         {
-                            victoria.Player.Speed = pan;
+                            animatedModel.Player.Speed = pan;
                         }
                         break;
 
                     case States.WalkStartBazooka:
-                        if (delta > victoria.Player.Clip.Duration - victoria.Player.Time)
+                        if (delta > animatedModel.Player.Clip.Duration - animatedModel.Player.Time)
                         {
-                            delta = victoria.Player.Clip.Duration - victoria.Player.Time;
+                            delta = animatedModel.Player.Clip.Duration - animatedModel.Player.Time;
 
                             // The clip is done after this update
-                            victoria.PlayClip("walkstartbazooka");
+                            animatedModel.PlayClip("walkstartbazooka");
                             state = States.WalkLoopStartBazooka;
                         }
 
@@ -472,21 +292,21 @@ namespace PrisonStep
                         }
                         else
                         {
-                            victoria.Player.Speed = speed;
+                            animatedModel.Player.Speed = speed;
                         }
 
                         break;
 
                     case States.WalkLoopStartBazooka:
-                        victoria.PlayClip("walkloopbazooka").Speed = GetDesiredSpeed(ref keyboardState, ref gamePadState);
+                        animatedModel.PlayClip("walkloopbazooka").Speed = GetDesiredSpeed(ref keyboardState, ref gamePadState);
                         state = States.WalkLoopBazooka;
                         break;
 
                     case States.WalkLoopBazooka:
                         location.Y = 0;
-                        if (delta > victoria.Player.Clip.Duration - victoria.Player.Time)
+                        if (delta > animatedModel.Player.Clip.Duration - animatedModel.Player.Time)
                         {
-                            delta = victoria.Player.Clip.Duration - victoria.Player.Time;
+                            delta = animatedModel.Player.Clip.Duration - animatedModel.Player.Time;
 
                             // The clip is done after this update
                             state = States.WalkLoopStartBazooka;
@@ -501,7 +321,7 @@ namespace PrisonStep
                         }
                         else
                         {
-                            victoria.Player.Speed = speed;
+                            animatedModel.Player.Speed = speed;
                         }
 
                         break;
@@ -511,51 +331,15 @@ namespace PrisonStep
                 // State update
                 //
 
-                if (!aiming)
-                {
-                    orientation += GetDesiredTurnRate(ref keyboardState, ref gamePadState) * (float)delta;
-                }
-                else
-                {
-                    aimAngle += GetDesiredTurnRate(ref keyboardState, ref gamePadState) * (float)delta;
-                }
-
-                victoria.Update(delta);
+                animatedModel.Update(delta);
 
                 //
                 // Part 1:  Compute a new orientation
                 //
 
-                Matrix deltaMatrix = victoria.DeltaMatrix;
+                Matrix deltaMatrix = animatedModel.DeltaMatrix;
                 deltaAngle = (float)Math.Atan2(deltaMatrix.Backward.X, deltaMatrix.Backward.Z);
                 newOrientation = orientation + deltaAngle;
-
-                if (keyboardState.IsKeyDown(Keys.LeftShift) && lastKeyboardState.IsKeyDown(Keys.LeftShift) && (state == States.Aim || state == States.StanceRaised))
-                {
-                    if (!aiming)
-                    {
-                        aimOrient = orientation;
-                        aimAngle = orientation;
-                    }
-                    aiming = true;
-
-                    if (aimOrient - aimAngle > 1.222f)
-                    {
-                        aimAngle = aimOrient - 1.222f;
-                    }
-
-                    if (aimOrient - aimAngle < -1.222f)
-                    {
-                        aimAngle = aimOrient + 1.222f;
-                    }
-
-                }
-                else
-                {
-                    aiming = false;
-                    int spineInd = victoria.Model.Bones["Bip01 Spine1"].Index;
-                    victoria.AbsoTransforms[spineInd].Backward = new Vector3(1, 0, 0);
-                }
 
                 //
                 // Part 2:  Compute a new location
@@ -563,9 +347,9 @@ namespace PrisonStep
 
                 // We are likely rotated from the angle the model expects to be in
                 // Determine that angle.
-                Matrix rootMatrix = victoria.RootMatrix;
+                Matrix rootMatrix = animatedModel.RootMatrix;
                 float actualAngle = (float)Math.Atan2(rootMatrix.Backward.X, rootMatrix.Backward.Z);
-                Vector3 newLocation = location + Vector3.TransformNormal(victoria.DeltaPosition + new Vector3(strafe, 0, 0),
+                Vector3 newLocation = location + Vector3.TransformNormal(animatedModel.DeltaPosition + new Vector3(strafe, 0, 0),
                                Matrix.CreateRotationY(newOrientation - actualAngle));
 
                 //
@@ -644,23 +428,6 @@ namespace PrisonStep
                 }
             }
 
-            if (keyboardState.IsKeyDown(Keys.LeftControl) && lastKeyboardState.IsKeyUp(Keys.LeftControl) && wieldBazooka)
-            {
-                if (crouch)
-                {
-                    crouch = false;
-                }
-                else if (!crouch)
-                {
-                    crouch = true;
-                }
-            }
-
-            if (keyboardState.IsKeyDown(Keys.A))
-            {
-                //transform *= Matrix.CreateTranslation(new Vector3(
-            }
-
             playerCollision.Update(gameTime, location);
 
             lastKeyboardState = keyboardState;
@@ -677,33 +444,7 @@ namespace PrisonStep
             Matrix transform = Matrix.CreateRotationY(orientation);
             transform.Translation = location;
 
-            if (wieldBazooka)
-            {
-                int handInd;
-                Matrix boneMat;
-
-                handInd = victoria.Model.Bones["Bip01 R Hand"].Index;
-
-                boneMat = victoria.AbsoTransforms[handInd] * transform;
-
-                Matrix bazTransform =
-                    Matrix.CreateRotationX(MathHelper.ToRadians(109.5f)) *
-                    Matrix.CreateRotationY(MathHelper.ToRadians(9.7f)) *
-                    Matrix.CreateRotationZ(MathHelper.ToRadians(72.9f)) *
-                    Matrix.CreateTranslation(-9.6f, 11.85f, 21.1f) *
-                    boneMat;
-
-                game.BazTransform = bazTransform;
-
-
-            }
-            else
-            {
-                game.BazTransform = Matrix.CreateTranslation(0, -100, 0);
-            }
-
-            victoria.Draw(graphics, gameTime, transform, inCamera.View, inCamera.Projection);
-            game.Bazooka.Draw(graphics, gameTime, game.BazTransform, inCamera.View, inCamera.Projection);
+            animatedModel.Draw(graphics, gameTime, transform, inCamera.View, inCamera.Projection);
 
         }
 
@@ -744,19 +485,14 @@ namespace PrisonStep
 
             float speed = gamePadState.ThumbSticks.Right.Y;
 
-            // I'm not allowing you to walk backwards
-            //if (speed < 0)
-            //    speed = 0;
+            if (speed < 0)
+                speed = 0;
 
             return speed;
         }
 
         public void PlayerAim()
         {
-            if (aiming)
-            {
-                victoria.BoneTransforms[victoria.Model.Bones["Bip01 Spine1"].Index] = Matrix.CreateRotationX(aimOrient - aimAngle) * victoria.BindTransforms[victoria.Model.Bones["Bip01 Spine1"].Index];
-            }
         }
     }
 }

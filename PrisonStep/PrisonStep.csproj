@@ -127,6 +127,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="PrisonGame.cs" />
     <Compile Include="PSLineDraw.cs" />
+    <Compile Include="Skybox.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Game.ico" />

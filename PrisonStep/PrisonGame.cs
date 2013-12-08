@@ -120,6 +120,8 @@ namespace PrisonStep
         private SpriteFont UIFont;
         SpriteBatch spriteBatch;
 
+        private Skybox skybox;
+
         /// <summary>
         /// Particle system business. Game components will use the particle system by accessing the game's copy of the particle effects.
         /// </summary>
@@ -136,6 +138,8 @@ namespace PrisonStep
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
 
+
+            skybox = new Skybox(this);
             // Camera settings
 
             camera = new Camera(graphics);
@@ -176,6 +180,7 @@ namespace PrisonStep
         /// </summary>
         protected override void Initialize()
         {
+            skybox.Initialize();
             camera.Initialize();
             camera2.Initialize();
             player.Initialize();
@@ -185,7 +190,7 @@ namespace PrisonStep
             //This section is lifted from the learning XNA 4.0 book. Partition the screen into two disjoint halves.
             Viewport vp1 = GraphicsDevice.Viewport;
             Viewport vp2 = GraphicsDevice.Viewport;
-            vp1.Height = (GraphicsDevice.Viewport.Height / 2) - 1;
+            vp1.Height = (GraphicsDevice.Viewport.Height / 2);
 
             vp2.Y = vp1.Height;
             vp2.Height = vp1.Height;
@@ -204,7 +209,7 @@ namespace PrisonStep
         /// </summary>
         protected override void LoadContent()
         {
-            //bazooka = Content.Load<Model>("PieBazooka");
+            skybox.LoadContent(Content);
             bazooka = new AnimatedModel(this, "PieBazooka");
             bazooka.LoadContent(Content);
             player.LoadContent(Content);
@@ -261,6 +266,8 @@ namespace PrisonStep
                     current = GameState.results;
 
                 lineDraw.Clear();
+
+                skybox.Update(gameTime);
 
                 player.Update(gameTime);
                 player2.Update(gameTime);
@@ -339,6 +346,8 @@ namespace PrisonStep
             player2.Draw(graphics, gameTime, inCamera);
 
             smokePlume.Draw(GraphicsDevice, inCamera);
+
+            skybox.Draw(graphics, gameTime, inCamera);
 
             GraphicsDevice.BlendState = BlendState.AlphaBlend;
             GraphicsDevice.BlendState = BlendState.Opaque;
