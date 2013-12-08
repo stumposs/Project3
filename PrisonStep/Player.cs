@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Audio;
 
 namespace PrisonStep
 {
@@ -14,6 +15,8 @@ namespace PrisonStep
     public class Player
     {
         #region Fields
+
+        private float exterminateDelay = 0.0f;
 
         private Camera camera;
         public Camera Camera { get { return camera; } }
@@ -38,9 +41,9 @@ namespace PrisonStep
         /// <summary>
         /// The player orientation as a simple angle
         /// </summary>
-        private float orientation = 1.6f;
+        private float horizontalOrientation = (float)Math.PI * 2;
 
-        private float upDownAngle = 0.0f;
+        private float verticalOrientation = 0.0f;
 
         /// <summary>
         /// The player transformation matrix. Places the player where they need to be.
@@ -53,18 +56,17 @@ namespace PrisonStep
         /// </summary>
         private float panRate = 2;
 
-        /// <summary>
-        /// Keeps track of the last game pad state
-        /// </summary>
-        GamePadState lastGPS;
-
-        private enum States { Start, StanceStart, Stance, WalkStart, WalkLoopStart, WalkLoop}
+        private enum States {Start}
         private States state = States.Start;
 
         /// <summary>
         /// Our animated model
         /// </summary>
-        private AnimatedModel animatedModel;
+        private AnimatedModel dalek;
+
+        private int Head;
+        private int Arm2;
+        private int Eye;
 
         private string playerRegion;
 
@@ -83,7 +85,7 @@ namespace PrisonStep
         {
             this.game = game;
             this.camera = inCamera;
-            animatedModel = new AnimatedModel(game, "dalek");
+            dalek = new AnimatedModel(game, "dalek");
             SetPlayerTransform();
 
             playerCollision = new BoundingCylinder(game, location);
@@ -91,7 +93,6 @@ namespace PrisonStep
 
         public void Initialize()
         {
-            lastGPS = GamePad.GetState(PlayerIndex.One);
         }
 
         /// <summary>
@@ -100,14 +101,18 @@ namespace PrisonStep
         /// </summary>
         private void SetPlayerTransform()
         {
-            transform = Matrix.CreateRotationY(orientation);
+            transform = Matrix.CreateRotationY(horizontalOrientation);
             transform.Translation = location;
         }
 
 
         public void LoadContent(ContentManager content)
         {
-            animatedModel.LoadContent(content);
+            dalek.LoadContent(content);
+
+            Head = dalek.Model.Bones.IndexOf(dalek.Model.Bones["Head"]);
+            Arm2 = dalek.Model.Bones.IndexOf(dalek.Model.Bones["Arm2"]);
+            Eye = dalek.Model.Bones.IndexOf(dalek.Model.Bones["Eye"]);
         }
 
         public string TestRegion(Vector3 v3)
@@ -123,223 +128,25 @@ namespace PrisonStep
         {
             double deltaTotal = gameTime.ElapsedGameTime.TotalSeconds;
 
-            KeyboardState keyboardState = Keyboard.GetState();
-            GamePadState gamePadState = GamePad.GetState(PlayerIndex.One);
-            float speed = 0;
-            float pan = 0;
             float strafe = 0;
-            float newOrientation;
-            float deltaAngle;
+            float newOrientation = horizontalOrientation;
+            float deltaAngle = 0;
+            float speed = 0;
+            float turnRate = 0;
 
             do
             {
                 double delta = deltaTotal;
 
-                //
-                // State machine
-                //
-
-                switch (state)
-                {
-                    case States.Start:
-                        state = States.StanceStart;
-                        delta = 0;
-                        break;
-
-                    case States.StanceStart:
-                        //animatedModel.PlayClip("stance");
-                        location.Y = 0;
-                        state = States.Stance;
-                        break;
-
-                    case States.Stance:
-                        speed = GetDesiredSpeed(ref keyboardState, ref gamePadState);
-                        pan = GetDesiredTurnRate(ref keyboardState, ref gamePadState);
-                        strafe = GetDesiredStrafe(ref keyboardState, ref gamePadState);
-
-                        if (speed > 0)
-                        {
-                            // We need to leave the stance state and start walking
-                            //animatedModel.PlayClip("walkloop");
-                            animatedModel.Player.Speed = speed;
-                            state = States.WalkLoop;
-                        }
-
-                        if (pan != 0)
-                        {
-                            animatedModel.Player.Speed = pan;
-                            state = States.TurnLoopStart;
-                        }
-
-                        break;
-
-                    case States.TurnLoopStart:
-                        if (pan > 0)
-                        {
-                            animatedModel.PlayClip("rightturn").Speed = GetDesiredTurnRate(ref keyboardState, ref gamePadState);
-                            state = States.TurnLoop;
-                            break;
-                        }
-                        else if (pan < 0)
-                        {
-                            animatedModel.PlayClip("leftturn").Speed = GetDesiredTurnRate(ref keyboardState, ref gamePadState);
-                            state = States.TurnLoop;
-                            break;
-                        }
-                        state = States.TurnLoop;
-
-                        break;
-
-                    case States.TurnLoop:
-                        if (delta > animatedModel.Player.Clip.Duration - animatedModel.Player.Time)
-                        {
-                            delta = animatedModel.Player.Clip.Duration - animatedModel.Player.Time;
-
-                            // The clip is done after this update
-                            state = States.TurnLoopStart;
-                        }
-
-                        strafe = GetDesiredStrafe(ref keyboardState, ref gamePadState);
-                        pan = GetDesiredTurnRate(ref keyboardState, ref gamePadState);
-                        if (pan == 0)
-                        {
-                            delta = 0;
-                            state = States.StanceStart;
-                        }
-                        else
-                        {
-                            animatedModel.Player.Speed = pan;
-                        }
-                        break;
-
-                    case States.WalkStart:
-                        if (delta > animatedModel.Player.Clip.Duration - animatedModel.Player.Time)
-                        {
-                            delta = animatedModel.Player.Clip.Duration - animatedModel.Player.Time;
-
-                            // The clip is done after this update
-                            state = States.WalkLoopStart;
-                        }
-
-                        strafe = GetDesiredStrafe(ref keyboardState, ref gamePadState);
-                        speed = GetDesiredSpeed(ref keyboardState, ref gamePadState);
-
-                        if (speed == 0)
-                        {
-                            delta = 0;
-                            state = States.StanceStart;
-                        }
-                        else
-                        {
-                            animatedModel.Player.Speed = speed;
-                        }
-
-                        break;
-                    case States.WalkLoop:
-                        location.Y = 0;
-                        if (delta > animatedModel.Player.Clip.Duration - animatedModel.Player.Time)
-                        {
-                            delta = animatedModel.Player.Clip.Duration - animatedModel.Player.Time;
-
-                            // The clip is done after this update
-                            state = States.WalkLoopStart;
-                        }
-
-                        strafe = GetDesiredStrafe(ref keyboardState, ref gamePadState);
-                        speed = GetDesiredSpeed(ref keyboardState, ref gamePadState);
-                        if (speed == 0)
-                        {
-                            delta = 0;
-                            state = States.StanceStart;
-                        }
-                        else
-                        {
-                            animatedModel.Player.Speed = speed;
-                        }
-
-                        break;
-
-                        strafe = GetDesiredStrafe(ref keyboardState, ref gamePadState);
-                        pan = GetDesiredTurnRate(ref keyboardState, ref gamePadState);
-                        if (pan == 0)
-                        {
-                            delta = 0;
-                            state = States.StanceStart;
-                        }
-                        else
-                        {
-                            animatedModel.Player.Speed = pan;
-                        }
-                        break;
-
-                    case States.WalkStartBazooka:
-                        if (delta > animatedModel.Player.Clip.Duration - animatedModel.Player.Time)
-                        {
-                            delta = animatedModel.Player.Clip.Duration - animatedModel.Player.Time;
-
-                            // The clip is done after this update
-                            animatedModel.PlayClip("walkstartbazooka");
-                            state = States.WalkLoopStartBazooka;
-                        }
-
-                        speed = GetDesiredSpeed(ref keyboardState, ref gamePadState);
-                        strafe = GetDesiredStrafe(ref keyboardState, ref gamePadState);
-
-                        if (speed == 0)
-                        {
-                            delta = 0;
-                            state = States.StanceStart;
-                        }
-                        else
-                        {
-                            animatedModel.Player.Speed = speed;
-                        }
-
-                        break;
-
-                    case States.WalkLoopStartBazooka:
-                        animatedModel.PlayClip("walkloopbazooka").Speed = GetDesiredSpeed(ref keyboardState, ref gamePadState);
-                        state = States.WalkLoopBazooka;
-                        break;
-
-                    case States.WalkLoopBazooka:
-                        location.Y = 0;
-                        if (delta > animatedModel.Player.Clip.Duration - animatedModel.Player.Time)
-                        {
-                            delta = animatedModel.Player.Clip.Duration - animatedModel.Player.Time;
-
-                            // The clip is done after this update
-                            state = States.WalkLoopStartBazooka;
-                        }
-
-                        strafe = GetDesiredStrafe(ref keyboardState, ref gamePadState);
-                        speed = GetDesiredSpeed(ref keyboardState, ref gamePadState);
-                        if (speed == 0)
-                        {
-                            delta = 0;
-                            state = States.StanceStart;
-                        }
-                        else
-                        {
-                            animatedModel.Player.Speed = speed;
-                        }
-
-                        break;
-                }
-
-                // 
-                // State update
-                //
-
-                animatedModel.Update(delta);
+                dalek.Update(delta);
 
                 //
                 // Part 1:  Compute a new orientation
                 //
 
-                Matrix deltaMatrix = animatedModel.DeltaMatrix;
-                deltaAngle = (float)Math.Atan2(deltaMatrix.Backward.X, deltaMatrix.Backward.Z);
-                newOrientation = orientation + deltaAngle;
+                //Matrix deltaMatrix = dalek.DeltaMatrix;
+                //deltaAngle = (float)Math.Atan2(deltaMatrix.Backward.X, deltaMatrix.Backward.Z);
+                //newOrientation = horizontalOrientation + deltaAngle;
 
                 //
                 // Part 2:  Compute a new location
@@ -347,16 +154,16 @@ namespace PrisonStep
 
                 // We are likely rotated from the angle the model expects to be in
                 // Determine that angle.
-                Matrix rootMatrix = animatedModel.RootMatrix;
-                float actualAngle = (float)Math.Atan2(rootMatrix.Backward.X, rootMatrix.Backward.Z);
-                Vector3 newLocation = location + Vector3.TransformNormal(animatedModel.DeltaPosition + new Vector3(strafe, 0, 0),
-                               Matrix.CreateRotationY(newOrientation - actualAngle));
+                //Matrix rootMatrix = dalek.RootMatrix;
+                //float actualAngle = (float)Math.Atan2(rootMatrix.Backward.X, rootMatrix.Backward.Z);
+                //Vector3 newLocation = location + Vector3.TransformNormal(dalek.DeltaPosition + new Vector3(strafe, 0, 0),
+                //               Matrix.CreateRotationY(newOrientation - actualAngle));
 
                 //
                 // Update the orientation
                 //
 
-                orientation = newOrientation;
+                //horizontalOrientation = newOrientation;
 
                 //
                 // Update the location
@@ -377,16 +184,16 @@ namespace PrisonStep
 
                 if (!collision)
                 {
-                    location = newLocation;
+                    //location = newLocation;
                 }
 
                 SetPlayerTransform();
 
-                bool collisionCamera = false;
+                //bool collisionCamera = false;
                 camera.Center = location + new Vector3(0,100,0);
                 Vector3 newCameraLocation = location + new Vector3(300, 100, 0);
                 camera.Eye = newCameraLocation;
-                string regionCamera = TestRegion(newCameraLocation);
+                //string regionCamera = TestRegion(newCameraLocation);
 
                 /*if (regionCamera == "")
                 {
@@ -416,21 +223,7 @@ namespace PrisonStep
  
             //do other keyboard based actions
 
-            if (keyboardState.IsKeyDown(Keys.D1) && lastKeyboardState.IsKeyUp(Keys.D1))
-            {
-                if (wieldBazooka)
-                {
-                    wieldBazooka = false;
-                }
-                else if (!wieldBazooka)
-                {
-                    wieldBazooka = true;
-                }
-            }
-
             playerCollision.Update(gameTime, location);
-
-            lastKeyboardState = keyboardState;
         }
 
 
@@ -441,10 +234,10 @@ namespace PrisonStep
         /// <param name="gameTime"></param>
         public void Draw(GraphicsDeviceManager graphics, GameTime gameTime, Camera inCamera)
         {
-            Matrix transform = Matrix.CreateRotationY(orientation);
+            Matrix transform = Matrix.CreateRotationY(horizontalOrientation);
             transform.Translation = location;
 
-            animatedModel.Draw(graphics, gameTime, transform, inCamera.View, inCamera.Projection);
+            dalek.Draw(graphics, gameTime, transform, inCamera.View, inCamera.Projection);
 
         }
 

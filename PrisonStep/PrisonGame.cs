@@ -28,7 +28,7 @@ namespace PrisonStep
         /// <summary>
         /// The camera we use
         /// </summary>
-        private Camera camera;
+        private Camera camera1;
 
         private Camera camera2;
 
@@ -42,6 +42,11 @@ namespace PrisonStep
         /// Stores the last keyboard state for the game.
         /// </summary>
         KeyboardState lastKeyboardState;
+
+        /// <summary>
+        /// Keeps track of the last game pad state
+        /// </summary>
+        GamePadState lastGPS;
 
         private Ground ground;
         public Ground Ground { get { return ground; } }
@@ -64,7 +69,7 @@ namespace PrisonStep
         /// <summary>
         /// The game camera
         /// </summary>
-        public Camera Camera { get { return camera; } }
+        public Camera Camera { get { return camera1; } }
 
         public Camera Camera2 { get { return camera2; } }
 
@@ -142,20 +147,21 @@ namespace PrisonStep
             skybox = new Skybox(this);
             // Camera settings
 
-            camera = new Camera(graphics);
-            camera.Eye = new Vector3(800, 180, 1053);
-            camera.Center = new Vector3(275, 90, 1053);
-            camera.FieldOfView = MathHelper.ToRadians(42);
+            camera1 = new Camera(graphics);
+            camera1.Eye = new Vector3(800, 180, 1053);
+            camera1.Center = new Vector3(275, 90, 1053);
+            camera1.FieldOfView = MathHelper.ToRadians(42);
 
             camera2 = new Camera(graphics);
-            camera.Eye = new Vector3(800, 180, 1053);
-            camera.Center = new Vector3(275, 90, 1053);
-            camera.FieldOfView = MathHelper.ToRadians(42);
+            camera1.Eye = new Vector3(800, 180, 1053);
+            camera1.Center = new Vector3(275, 90, 1053);
+            camera1.FieldOfView = MathHelper.ToRadians(42);
 
             ground = new Ground(this);
 
             // Create a player object
-            player = new Player(this, camera);
+            player = new Player(this, camera1);
+            player2.Location = new Vector3(0, 0, 0);
             player2 = new Player(this, camera2);
             player2.Location = new Vector3(0,0, 100);
 
@@ -181,7 +187,7 @@ namespace PrisonStep
         protected override void Initialize()
         {
             skybox.Initialize();
-            camera.Initialize();
+            camera1.Initialize();
             camera2.Initialize();
             player.Initialize();
             player2.Initialize();
@@ -195,7 +201,7 @@ namespace PrisonStep
             vp2.Y = vp1.Height;
             vp2.Height = vp1.Height;
 
-            camera.Viewport = vp1;
+            camera1.Viewport = vp1;
             camera2.Viewport = vp2;
 
             base.Initialize();
@@ -250,6 +256,7 @@ namespace PrisonStep
             base.Update(gameTime);
 
             KeyboardState keyboardState = Keyboard.GetState();
+            GamePadState gamePadState = GamePad.GetState(PlayerIndex.One);
 
             //
             // Update game components
@@ -275,23 +282,11 @@ namespace PrisonStep
                 ground.Update(gameTime);
 
 
-                camera.Update(gameTime);
+                camera1.Update(gameTime);
                 camera2.Update(gameTime);
 
                 //particle systems
                 smokePlume.Update(gameTime.ElapsedGameTime.TotalSeconds);
-
-                // Amount to change slimeLevel in one second
-                float slimeRate = 2.5f;
-
-                if (slimed && slimeLevel >= -1.5)
-                {
-                    slimeLevel -= (float)gameTime.ElapsedGameTime.TotalSeconds * slimeRate;
-                }
-                else if (!slimed && slimeLevel < 1)
-                {
-                    slimeLevel += (float)gameTime.ElapsedGameTime.TotalSeconds * slimeRate;
-                }
             }
             else if (current == GameState.results)
             {
@@ -309,7 +304,6 @@ namespace PrisonStep
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-
             if (current == GameState.splash)
             {
                 spriteBatch.Begin();
@@ -320,8 +314,8 @@ namespace PrisonStep
             else if (current == GameState.game)
             {
                 graphics.GraphicsDevice.Clear(Color.Black);
-                GraphicsDevice.Viewport = camera.Viewport;
-                DrawGame(gameTime, camera);
+                GraphicsDevice.Viewport = camera1.Viewport;
+                DrawGame(gameTime, camera1);
                 GraphicsDevice.Viewport = camera2.Viewport;
                 DrawGame(gameTime, camera2);
                 
